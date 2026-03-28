@@ -724,6 +724,56 @@
   }
   .modal-cancel:hover { background: var(--bg3); }
 
+  /* ── CHANNEL EDITOR MODAL ── */
+  .modal.editor {
+    border-color: var(--border2);
+    max-width: 400px;
+    text-align: left;
+  }
+  .modal.editor .modal-title { color: var(--text); font-size: 16px; }
+  .modal.editor .modal-confirm { background: var(--blue); }
+  .modal.editor .modal-confirm:hover { opacity: 0.9; }
+
+  /* ── A2 SWAP CHECKLIST ── */
+  .swap-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .swap-body { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .swap-section-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+    color: var(--text3); text-transform: uppercase; padding: 8px 0 2px;
+  }
+  .swap-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 12px;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .swap-item:hover { border-color: var(--border2); }
+  .swap-item.done { opacity: 0.45; }
+  .swap-item.done .swap-desc { text-decoration: line-through; }
+  .swap-check {
+    width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; margin-top: 1px;
+    border: 1.5px solid var(--border2); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--purple);
+    transition: all 0.12s;
+  }
+  .swap-item.done .swap-check { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .swap-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+  .swap-desc { font-size: 13px; color: var(--text2); line-height: 1.4; }
+  .swap-item.done .swap-meta { color: var(--text3); }
+  .swap-empty { font-size: 13px; color: var(--text3); padding: 20px; }
+  .swap-progress {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    padding: 4px 10px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
   /* ── TOAST ── */
   .toast {
     position: fixed;
@@ -862,6 +912,9 @@
     <div class="nav-btn" onclick="showPage('flow')" id="nav-flow">
       ▶<div class="tooltip">Show flow</div>
     </div>
+    <div class="nav-btn" onclick="showPage('a2swap')" id="nav-a2swap">
+      ⇄<div class="tooltip">A2 mic swaps</div>
+    </div>
     <div class="sidebar-spacer"></div>
     <div class="nav-btn" onclick="showPage('settings')" id="nav-settings">
       ⚙<div class="tooltip">Settings & import</div>
@@ -970,6 +1023,17 @@
       <div class="flow-body" id="flowList"></div>
     </div>
 
+    <!-- ── PAGE: A2 MIC SWAP CHECKLIST ── -->
+    <div class="page" id="page-a2swap">
+      <div class="swap-header">
+        <div class="page-title">A2 mic swaps</div>
+        <div id="swapProgress" class="swap-progress">0 / 0</div>
+        <div style="flex:1"></div>
+        <button class="btn sm" onclick="resetSwapChecks()">↺ Reset</button>
+      </div>
+      <div class="swap-body" id="swapList"></div>
+    </div>
+
     <!-- ── PAGE: SETTINGS ── -->
     <div class="page" id="page-settings">
       <div class="channels-header">
@@ -1070,6 +1134,9 @@
   <button class="mobile-nav-btn" id="mnav-flow" onclick="showPage('flow')">
     <span class="icon">▶</span><span>Flow</span>
   </button>
+  <button class="mobile-nav-btn" id="mnav-a2swap" onclick="showPage('a2swap')">
+    <span class="icon">⇄</span><span>Swaps</span>
+  </button>
   <button class="mobile-nav-btn" id="mnav-settings" onclick="showPage('settings')">
     <span class="icon">⚙</span><span>Setup</span>
   </button>
@@ -1083,6 +1150,40 @@
     <div class="modal-actions">
       <button class="modal-confirm" onclick="executePanic()">MUTE ALL</button>
       <button class="modal-cancel" onclick="closePanic()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANNEL EDITOR MODAL -->
+<div class="modal-overlay" id="channelEditModal">
+  <div class="modal editor">
+    <div class="modal-title" id="chEditTitle">Edit channel</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="field-row">
+        <div class="field-label">Actor</div>
+        <input class="field-input" id="chEditActor" placeholder="Actor name" />
+      </div>
+      <div class="field-row">
+        <div class="field-label">Character</div>
+        <input class="field-input" id="chEditChar" placeholder="Character" />
+      </div>
+      <div class="field-row">
+        <div class="field-label">Frequency</div>
+        <input class="field-input" id="chEditFreq" placeholder="e.g. 518.100 MHz" />
+      </div>
+      <div class="field-row">
+        <div class="field-label">Status</div>
+        <select class="field-input" id="chEditStatus">
+          <option value="active">Active</option>
+          <option value="swapped">Swapped</option>
+          <option value="problem">RF problem</option>
+          <option value="off">Off</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-confirm editor" onclick="saveChannelEdit()">Save</button>
+      <button class="modal-cancel" onclick="closeChannelEdit()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1132,6 +1233,7 @@ function showPage(p) {
   if (p === 'channels') renderChannels();
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
+  if (p === 'a2swap') renderA2Swap();
   if (p === 'settings') loadSettingsStatus();
 }
 
@@ -1298,14 +1400,35 @@ function addChannel() {
   save();
 }
 
+let _editingChannelIdx = -1;
+
 function editChannel(i) {
   const ch = state.channels[i];
-  const statuses = ['active', 'swapped', 'problem', 'off'];
-  const next = statuses[(statuses.indexOf(ch.status || 'active') + 1) % statuses.length];
-  ch.status = next;
+  _editingChannelIdx = i;
+  document.getElementById('chEditTitle').textContent = `Edit CH${ch.num || (i+1)}`;
+  document.getElementById('chEditActor').value  = ch.actor     || '';
+  document.getElementById('chEditChar').value   = ch.character || '';
+  document.getElementById('chEditFreq').value   = ch.freq      || '';
+  document.getElementById('chEditStatus').value = ch.status    || 'active';
+  document.getElementById('channelEditModal').classList.add('open');
+}
+
+function closeChannelEdit() {
+  document.getElementById('channelEditModal').classList.remove('open');
+  _editingChannelIdx = -1;
+}
+
+function saveChannelEdit() {
+  if (_editingChannelIdx < 0) return;
+  const ch = state.channels[_editingChannelIdx];
+  ch.actor     = document.getElementById('chEditActor').value.trim();
+  ch.character = document.getElementById('chEditChar').value.trim();
+  ch.freq      = document.getElementById('chEditFreq').value.trim();
+  ch.status    = document.getElementById('chEditStatus').value;
+  closeChannelEdit();
   renderChannels();
   save();
-  showToast(`CH${ch.num} → ${next}`, next === 'active' ? 'success' : '');
+  showToast(`CH${ch.num} saved`, 'success');
 }
 
 // ── SCENE LIST ──
@@ -1628,12 +1751,14 @@ function applyLoadedState() {
   if (currentPage === 'channels') renderChannels();
   if (currentPage === 'scenes') renderScenes();
   if (currentPage === 'flow') renderFlow();
+  if (currentPage === 'a2swap') renderA2Swap();
 }
 
 function clearAll() {
   if (!confirm('Clear ALL show data? This cannot be undone.')) return;
   state.cues = []; state.channels = []; state.scenes = []; state.flow = [];
   state.activeCue = -1; state.show = { name: '', venue: '' };
+  Object.keys(swapChecks).forEach(k => delete swapChecks[k]);
   save(); applyLoadedState(); showToast('All data cleared');
 }
 
@@ -1732,6 +1857,62 @@ function executePanic() {
       console.warn('[PANIC] bridge unreachable:', err.message);
       showToast('⚠ PANIC sent (bridge unreachable)', 'error');
     });
+}
+
+// ── A2 MIC SWAP CHECKLIST ──
+// swapChecks is intentionally NOT persisted — resets each session for a clean show start.
+const swapChecks = {};
+
+function swapKey(cue, idx) {
+  return `${idx}|${cue.scene}|${cue.actionVal}`;
+}
+
+function renderA2Swap() {
+  const list = document.getElementById('swapList');
+  const swapCues = state.cues
+    .map((c, i) => ({ cue: c, idx: i }))
+    .filter(({ cue }) => cue.action === 'swap');
+
+  const progress = document.getElementById('swapProgress');
+
+  if (swapCues.length === 0) {
+    list.innerHTML = '<div class="swap-empty">No swap cues in script. Add cues with action "Mic swap" to see them here.</div>';
+    progress.textContent = '0 / 0';
+    return;
+  }
+
+  const done = swapCues.filter(({ cue, idx }) => swapChecks[swapKey(cue, idx)]).length;
+  progress.textContent = `${done} / ${swapCues.length}`;
+
+  let html = '';
+  let lastScene = null;
+  swapCues.forEach(({ cue, idx }) => {
+    if (cue.scene !== lastScene) {
+      html += `<div class="swap-section-label">${esc(cue.scene)}</div>`;
+      lastScene = cue.scene;
+    }
+    const key = swapKey(cue, idx);
+    const isDone = !!swapChecks[key];
+    html += `<div class="swap-item${isDone ? ' done' : ''}" onclick="toggleSwapCheck('${esc(key)}')">
+      <div class="swap-check">${isDone ? '✓' : ''}</div>
+      <div>
+        <div class="swap-meta">${esc(cue.character)}</div>
+        <div class="swap-desc">${esc(cue.line)}</div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function toggleSwapCheck(key) {
+  swapChecks[key] = !swapChecks[key];
+  renderA2Swap();
+}
+
+function resetSwapChecks() {
+  Object.keys(swapChecks).forEach(k => delete swapChecks[k]);
+  renderA2Swap();
+  showToast('Swap checklist reset');
 }
 
 // ── KEYBOARD ──

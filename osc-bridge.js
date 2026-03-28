@@ -10,6 +10,8 @@ const DM7_IP         = process.env.DM7_IP          || '192.168.1.100';
 const DM7_OSC_PORT   = parseInt(process.env.DM7_OSC_PORT, 10) || 49280;
 const MIDI_DEV_INDEX = parseInt(process.env.MIDI_DEVICE_INDEX, 10) || 0;
 const BRIDGE_PORT    = parseInt(process.env.BRIDGE_PORT, 10) || 3000;
+const ULXD_PORT      = parseInt(process.env.ULXD_PORT, 10) || 2202;
+const ULXD_IPS       = (process.env.ULXD_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 function log(tag, msg) {
@@ -90,6 +92,64 @@ function sendMidi(type, channel, data1, data2) {
   return true;
 }
 
+// ── ULXD receiver telemetry ───────────────────────────────────────────────────
+// Shure ULXD protocol: UDP port 2202, ASCII commands < GET slot CMD >
+// Response format: < REP slot CMD {value} >
+
+function queryULXD(ip, slot, command, timeoutMs = 600) {
+  return new Promise((resolve, reject) => {
+    const sock = dgram.createSocket('udp4');
+    const msg  = Buffer.from(`< GET ${slot} ${command} >\r\n`);
+    let done   = false;
+
+    const finish = (fn) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { sock.close(); } catch (_) {}
+      fn();
+    };
+
+    const timer = setTimeout(() => finish(() => reject(new Error('timeout'))), timeoutMs);
+
+    sock.on('message', buf => finish(() => resolve(buf.toString().trim())));
+    sock.on('error',   err => finish(() => reject(err)));
+
+    sock.send(msg, 0, msg.length, ULXD_PORT, ip, err => {
+      if (err) finish(() => reject(err));
+    });
+  });
+}
+
+function parseULXDReply(reply) {
+  // < REP slot CMD {value} >  or  < REP slot CMD value >
+  const m = reply.match(/< REP\s+\d+\s+\w+\s+\{?([^}>]+?)\}?\s*>/);
+  return m ? m[1].trim() : null;
+}
+
+async function getReceiverTelemetry(ip) {
+  const slots   = [1, 2, 3, 4];
+  const channels = [];
+  for (const slot of slots) {
+    const [battR, rfR, nameR, freqR, txR] = await Promise.all([
+      queryULXD(ip, slot, 'BATT_BARS').catch(() => null),
+      queryULXD(ip, slot, 'RX_RF_LVL').catch(() => null),
+      queryULXD(ip, slot, 'CHAN_NAME').catch(() => null),
+      queryULXD(ip, slot, 'FREQUENCY').catch(() => null),
+      queryULXD(ip, slot, 'TX_TYPE').catch(() => null),
+    ]);
+    channels.push({
+      slot,
+      batt_bars: battR ? parseULXDReply(battR) : null,
+      rf_level:  rfR   ? parseULXDReply(rfR)   : null,
+      chan_name:  nameR ? parseULXDReply(nameR)  : null,
+      frequency:  freqR ? parseULXDReply(freqR)  : null,
+      tx_type:    txR   ? parseULXDReply(txR)    : null,
+    });
+  }
+  return { ip, channels };
+}
+
 // ── Express server ────────────────────────────────────────────────────────────
 const app = express();
 app.use(cors());
@@ -164,9 +224,35 @@ app.get('/status', (req, res) => {
     dm7_osc_port: DM7_OSC_PORT,
     midi_enabled: midiOut !== null,
     midi_device_name: midiOut ? midiOut.getPortName(MIDI_DEV_INDEX) : null,
+    ulxd_port: ULXD_PORT,
+    ulxd_receiver_count: ULXD_IPS.length,
     timestamp: new Date().toISOString()
   };
   res.json(status);
+});
+
+// GET /ulxd — query all configured ULXD receivers and return telemetry
+// Receivers are configured via ULXD_IPS in .env (comma-separated IPs).
+// Optional ?ips=x.x.x.x,y.y.y.y query param overrides the env list for one-off queries.
+app.get('/ulxd', async (req, res) => {
+  const ips = req.query.ips
+    ? req.query.ips.split(',').map(s => s.trim()).filter(Boolean)
+    : ULXD_IPS;
+
+  log('HTTP', `GET /ulxd — querying ${ips.length} receiver(s): ${ips.join(', ') || 'none'}`);
+
+  if (ips.length === 0) {
+    return res.json({ status: 'ok', message: 'No receivers configured. Set ULXD_IPS in .env or pass ?ips=', receivers: [], timestamp: new Date().toISOString() });
+  }
+
+  try {
+    const receivers = await Promise.all(ips.map(ip => getReceiverTelemetry(ip)));
+    log('HTTP', `ULXD telemetry returned for ${receivers.length} receiver(s)`);
+    res.json({ status: 'ok', receivers, timestamp: new Date().toISOString() });
+  } catch (err) {
+    log('ULXD', `Error: ${err.message}`);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
 });
 
 // POST /panic — mute all channels 1-32 simultaneously
@@ -200,7 +286,12 @@ initMidi();
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  GET /status  POST /osc  POST /midi  POST /panic');
+  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  POST /osc  POST /midi  POST /panic');
+  if (ULXD_IPS.length > 0) {
+    log('SERVER', `ULXD receivers (port ${ULXD_PORT}): ${ULXD_IPS.join(', ')}`);
+  } else {
+    log('SERVER', 'ULXD: no receivers configured (set ULXD_IPS in .env)');
+  }
 });
 
 process.on('exit', () => {
