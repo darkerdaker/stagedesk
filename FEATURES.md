@@ -60,18 +60,24 @@ and talking points for the technical team.
 
 ## Shure ULXD integration
 
-- **Live battery per pack** — BATT_BARS polled per slot per receiver
-- **RF signal level** — RX_RF_LVL per slot, visible on channel cards
-- **Frequency confirmation** — FREQUENCY field verifies on-air frequency
-  matches plot
-- **Channel name sync** — CHAN_NAME pulled from receiver, can cross-check
-  against StageDesk channel assignment
+- **Live battery per pack** — BATT_BARS polled per slot per receiver; 5-bar
+  indicator on each channel card (green ≥ 3, amber = 2, red ≤ 1)
+- **Battery critical toast** — 1-bar (or 0) triggers a `⚠ Low battery:
+  [actor] ch[N]` toast regardless of which page is active; alert resets
+  if battery recovers (pack swap)
+- **RF signal level** — RX_RF_LVL per slot rendered as 3-bar signal
+  indicator on channel cards (strong / weak / critical thresholds)
+- **Frequency confirmation** — live FREQUENCY from receiver shown below
+  plot frequency; turns red with `!` flag if mismatch > 50 kHz
+- **Channel name sync** — CHAN_NAME matched to actor/character for
+  telemetry mapping; falls back to slot-order if no name match
 - **Transmitter type** — TX_TYPE identifies pack type per slot
+- **ULXD auto-poll** — `fetchULXD()` runs every 30s via `startULXDPoll()`,
+  triggered 4s after page load; also fires immediately on channels page open
+- **ULXD topbar indicator** — small pill shows last poll time (HH:MM) with
+  green dot, or ULXD ERR in red if bridge unreachable
 
 ## Planned / upcoming
-
-- [ ] Channel cards wired to live ULXD data (battery/RF on each card)
-- [ ] ULXD auto-poll loop in frontend (every 30s)
 - [ ] Real DM7 + ULXD test at the theatre
 - [ ] Channel editor — frequency assignment from ULXD scan
 - [ ] Show file import from Yamaha DM7 scene library
