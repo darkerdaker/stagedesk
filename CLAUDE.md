@@ -28,7 +28,8 @@ The bridge sends UDP OSC packets to the DM7 on port 49280 and optionally sends M
 |------|------|
 | `broadway-audio-app.html` | Full UI — tabs for A1 console, A2 mic tracker, RF scan, scene recall |
 | `osc-bridge.js` | Express server: `/ping`, `/osc`, `/midi`, `/panic` endpoints |
-| `.env` | `DM7_IP`, `DM7_OSC_PORT`, `MIDI_DEVICE_INDEX`, `BRIDGE_PORT` |
+| `.env` | `DM7_IP`, `DM7_OSC_PORT`, `MIDI_DEVICE_INDEX`, `BRIDGE_PORT`, `ULXD_IPS`, `PUSHOVER_TOKEN`, `PUSHOVER_GROUP`, `BATTERY_WARN_BARS`, `BATTERY_CRITICAL_BARS` |
+| `.env.example` | Committed template — copy to `.env` and fill in per-venue values |
 | `package.json` | Node dependencies |
 
 ## Bridge API
@@ -39,6 +40,8 @@ The bridge sends UDP OSC packets to the DM7 on port 49280 and optionally sends M
 | `/osc` | POST | Send arbitrary OSC: `{ path, args: [{type, value}] }` |
 | `/midi` | POST | Send MIDI: `{ type, channel, data1, data2? }` |
 | `/panic` | POST | Mute all 32 channels simultaneously via OSC |
+| `/ulxd` | GET | Poll all ULXD receivers, returns telemetry + fires battery alerts |
+| `/pushover/test` | GET | Send a test Pushover notification to verify setup |
 
 OSC arg types: `"f"` (float 0.0–1.0), `"i"` (integer), `"s"` (string)
 
@@ -75,6 +78,12 @@ Edit `.env` with the DM7's actual IP before each show. Default: `192.168.1.100:4
 - At the end of every session, stage all changed files, commit with a
   descriptive message, and push to origin
 - Never leave modified files uncommitted at session end
+
+## Push notifications
+- Pushover token/group live in `.env` only — never commit
+- `sendPushover()` fails silently when keys not set — do not add fallback logic
+- Priority 2 (emergency) requires `retry` + `expire` params — always include them
+- Debounce key format: `"<ip>:<slot>:<tier>"` where tier is `warn` or `critical`
 
 ## What NOT to do
 - Do not add a frontend framework (React, Vue, etc.) — the single-file constraint is intentional

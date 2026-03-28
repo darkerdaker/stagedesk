@@ -4,19 +4,85 @@ const cors = require('cors');
 const osc = require('osc');
 const midi = require('midi');
 const dgram = require('dgram');
+const https = require('https');
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const DM7_IP         = process.env.DM7_IP          || '192.168.1.100';
 const DM7_OSC_PORT   = parseInt(process.env.DM7_OSC_PORT, 10) || 49280;
 const MIDI_DEV_INDEX = parseInt(process.env.MIDI_DEVICE_INDEX, 10) || 0;
 const BRIDGE_PORT    = parseInt(process.env.BRIDGE_PORT, 10) || 3000;
-const ULXD_PORT      = parseInt(process.env.ULXD_PORT, 10) || 2202;
-const ULXD_IPS       = (process.env.ULXD_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+const ULXD_PORT           = parseInt(process.env.ULXD_PORT, 10) || 2202;
+const ULXD_IPS            = (process.env.ULXD_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+const PUSHOVER_TOKEN      = process.env.PUSHOVER_TOKEN  || '';
+const PUSHOVER_GROUP      = process.env.PUSHOVER_GROUP  || '';
+const BATTERY_WARN_BARS     = parseInt(process.env.BATTERY_WARN_BARS,     10) || 2;
+const BATTERY_CRITICAL_BARS = parseInt(process.env.BATTERY_CRITICAL_BARS, 10) || 1;
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 function log(tag, msg) {
   const ts = new Date().toISOString().replace('T', ' ').slice(0, 23);
   console.log(`[${ts}] [${tag}] ${msg}`);
+}
+
+// ── Pushover push notifications ───────────────────────────────────────────────
+// Fails silently when token/group not configured — safe to leave unset.
+// Priority: 0 = normal, 1 = high (bypasses quiet hours), 2 = emergency (repeats until ack'd).
+
+function sendPushover(title, message, priority = 0) {
+  if (!PUSHOVER_TOKEN || !PUSHOVER_GROUP) {
+    log('PUSH', `Skipped (not configured) — "${title}"`);
+    return;
+  }
+  const params = { token: PUSHOVER_TOKEN, user: PUSHOVER_GROUP, title, message, priority };
+  if (priority === 2) { params.retry = 60; params.expire = 3600; }
+
+  const body    = new URLSearchParams(params).toString();
+  const options = {
+    hostname: 'api.pushover.net',
+    path:     '/1/messages.json',
+    method:   'POST',
+    headers:  { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) },
+  };
+  const req = https.request(options, r => log('PUSH', `HTTP ${r.statusCode} — "${title}"`));
+  req.on('error', err => log('PUSH', `Error: ${err.message}`));
+  req.write(body);
+  req.end();
+  log('PUSH', `→ priority=${priority}  "${title}"  ${message}`);
+}
+
+// Per-channel debounce — don't re-notify the same channel within 5 minutes.
+// Key format: "<ip>:<slot>:<tier>"  tier = 'warn' | 'critical'
+const _batteryNotifyTimes = new Map();
+const NOTIFY_DEBOUNCE_MS  = 5 * 60 * 1000;
+
+function _shouldNotify(key) {
+  const last = _batteryNotifyTimes.get(key);
+  return !last || (Date.now() - last) >= NOTIFY_DEBOUNCE_MS;
+}
+
+function checkBatteryAndNotify(receivers) {
+  receivers.forEach(receiver => {
+    receiver.channels.forEach(ch => {
+      if (ch.batt_bars === null) return;
+      const bars = parseInt(ch.batt_bars, 10);
+      const base = `${receiver.ip}:${ch.slot}`;
+      const name = (ch.chan_name && ch.chan_name !== 'EMPTY') ? ch.chan_name : `slot ${ch.slot}`;
+
+      if (bars <= BATTERY_CRITICAL_BARS) {
+        const key = `${base}:critical`;
+        if (_shouldNotify(key)) {
+          _batteryNotifyTimes.set(key, Date.now());
+          sendPushover('⚠ Dead Battery', `${name} — ${receiver.ip} slot ${ch.slot} — Replace immediately`, 2);
+        }
+      } else if (bars <= BATTERY_WARN_BARS) {
+        const key = `${base}:warn`;
+        if (_shouldNotify(key)) {
+          _batteryNotifyTimes.set(key, Date.now());
+          sendPushover('⚠ Low Battery', `${name} — ${receiver.ip} slot ${ch.slot} — ${bars} bars remaining`, 1);
+        }
+      }
+    });
+  });
 }
 
 // ── OSC UDP client ────────────────────────────────────────────────────────────
@@ -226,6 +292,9 @@ app.get('/status', (req, res) => {
     midi_device_name: midiOut ? midiOut.getPortName(MIDI_DEV_INDEX) : null,
     ulxd_port: ULXD_PORT,
     ulxd_receiver_count: ULXD_IPS.length,
+    pushover_enabled: !!(PUSHOVER_TOKEN && PUSHOVER_GROUP),
+    battery_warn_bars: BATTERY_WARN_BARS,
+    battery_critical_bars: BATTERY_CRITICAL_BARS,
     timestamp: new Date().toISOString()
   };
   res.json(status);
@@ -248,11 +317,22 @@ app.get('/ulxd', async (req, res) => {
   try {
     const receivers = await Promise.all(ips.map(ip => getReceiverTelemetry(ip)));
     log('HTTP', `ULXD telemetry returned for ${receivers.length} receiver(s)`);
+    checkBatteryAndNotify(receivers);
     res.json({ status: 'ok', receivers, timestamp: new Date().toISOString() });
   } catch (err) {
     log('ULXD', `Error: ${err.message}`);
     res.status(500).json({ status: 'error', message: err.message });
   }
+});
+
+// GET /pushover/test — send a test notification to verify setup before show night
+app.get('/pushover/test', (req, res) => {
+  log('HTTP', 'GET /pushover/test');
+  if (!PUSHOVER_TOKEN || !PUSHOVER_GROUP) {
+    return res.status(400).json({ status: 'error', message: 'PUSHOVER_TOKEN or PUSHOVER_GROUP not set in .env' });
+  }
+  sendPushover('StageDesk Test', 'Pushover notifications are working. Show night ready.', 0);
+  res.json({ status: 'ok', message: 'Test notification sent' });
 });
 
 // POST /panic — mute all channels 1-32 simultaneously
@@ -286,7 +366,8 @@ initMidi();
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  POST /osc  POST /midi  POST /panic');
+  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  POST /osc  POST /midi  POST /panic');
+  log('SERVER', `Pushover: ${(PUSHOVER_TOKEN && PUSHOVER_GROUP) ? `enabled (warn≤${BATTERY_WARN_BARS} critical≤${BATTERY_CRITICAL_BARS})` : 'disabled (set PUSHOVER_TOKEN + PUSHOVER_GROUP in .env)'}`);
   if (ULXD_IPS.length > 0) {
     log('SERVER', `ULXD receivers (port ${ULXD_PORT}): ${ULXD_IPS.join(', ')}`);
   } else {

@@ -17,6 +17,15 @@ and talking points for the technical team.
   of 32 sequential OSC messages, faster and more reliable in an emergency
 - **Session-only A2 checklist** — swap checkboxes intentionally not saved
   to localStorage so every show starts with a clean slate
+- **Pushover push notifications** — battery alerts sent to the whole crew
+  via Pushover group key; priority 2 emergency for dead packs (repeats until
+  acknowledged), priority 1 high for low battery (bypasses quiet hours)
+- **5-minute notification debounce** — per-channel debounce prevents alert
+  spam; resets automatically so re-notification fires if battery drops further
+- **Pushover fails silently** — if PUSHOVER_TOKEN/GROUP not set in .env,
+  notifications are skipped with a log line, no crash or UI error
+- **Pre-show notification test** — GET /pushover/test endpoint + Settings
+  button sends a priority-0 test message to confirm delivery before curtain
 - **localStorage persistence** — all show data (cues, channels, scenes,
   flow) survives browser refresh and tab close with no backend required
 - **No internet dependency** — entire app runs on closed show network,
