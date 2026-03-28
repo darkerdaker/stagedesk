@@ -96,6 +96,9 @@ Expected response:
 ### `GET /ping`
 Sends a `/xinfo` OSC probe to the DM7 and returns bridge status.
 
+### `GET /status`
+Returns current config — DM7 IP, OSC port, MIDI device name, and whether MIDI is active. Does not expose raw `.env` content.
+
 ### `POST /osc`
 Send any OSC message to the DM7.
 

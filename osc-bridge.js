@@ -155,6 +155,20 @@ app.post('/midi', (req, res) => {
   }
 });
 
+// GET /status — return current config (never expose raw .env values)
+app.get('/status', (req, res) => {
+  log('HTTP', 'GET /status');
+  const status = {
+    bridge_port: BRIDGE_PORT,
+    dm7_ip: DM7_IP,
+    dm7_osc_port: DM7_OSC_PORT,
+    midi_enabled: midiOut !== null,
+    midi_device_name: midiOut ? midiOut.getPortName(MIDI_DEV_INDEX) : null,
+    timestamp: new Date().toISOString()
+  };
+  res.json(status);
+});
+
 // POST /panic — mute all channels 1-32 simultaneously
 // Sends OSC fader-to-zero on every input channel. Uses DM7 OSC path format.
 app.post('/panic', (req, res) => {
@@ -186,7 +200,7 @@ initMidi();
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  POST /osc  POST /midi  POST /panic');
+  log('SERVER', 'Endpoints: GET /ping  GET /status  POST /osc  POST /midi  POST /panic');
 });
 
 process.on('exit', () => {
