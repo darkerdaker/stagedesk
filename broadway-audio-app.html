@@ -98,6 +98,7 @@
   }
   .osc-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
   .osc-dot.error { background: var(--red); }
+  .osc-dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
 
   .role-pill {
     font-family: var(--mono);
@@ -973,7 +974,10 @@
         </div>
 
         <div class="settings-section">
-          <div class="settings-label">DM7 console connection</div>
+          <div class="settings-label" style="display:flex;align-items:center;gap:8px;">
+            DM7 console connection
+            <span id="bridgeBadge" style="font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);">checking…</span>
+          </div>
           <div class="settings-card">
             <div class="field-row">
               <div class="field-label">IP address</div>
@@ -993,6 +997,8 @@
               <button class="btn sm" onclick="saveConsoleSettings()">Save settings</button>
               <button class="btn sm" onclick="testConnection()" style="color:var(--blue);border-color:var(--blue);">⊙ Test connection</button>
             </div>
+            <div id="pingResult" style="display:none;margin-top:8px;padding:10px;border-radius:var(--radius);font-family:var(--mono);font-size:11px;white-space:pre;"></div>
+            <div id="midiDeviceRow" style="display:none;font-size:11px;color:var(--text2);font-family:var(--mono);padding-top:4px;"></div>
             <div style="font-size:12px;color:var(--text3);font-family:var(--mono);padding-top:4px;">
               OSC bridge required — run the companion Node.js script on a local machine on the same network as the DM7.
             </div>
@@ -1107,6 +1113,7 @@ function showPage(p) {
   if (p === 'channels') renderChannels();
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
+  if (p === 'settings') loadSettingsStatus();
 }
 
 // ── ROLE ──
@@ -1385,8 +1392,8 @@ function startClock() {
 
 // ── CONSOLE / OSC ──
 function sendOSC(path, args) {
-  if (!state.console.ip) return;
-  const url = `http://${state.console.ip}:3000/osc`;
+  const bridgeHost = state.console.ip || 'localhost';
+  const url = `http://${bridgeHost}:3000/osc`;
   fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1396,35 +1403,128 @@ function sendOSC(path, args) {
       state.connected = true;
       setConsoleStatus(true);
     }
-  }).catch(() => {
+  }).catch(err => {
     state.connected = false;
     setConsoleStatus(false);
+    console.warn('[OSC] send failed:', path, err.message);
   });
 }
 
 function sendConsoleAction(cue) {
   switch (cue.action) {
-    case 'scene':   sendOSC('/scene/recall', [parseInt(cue.actionVal)]); break;
-    case 'mute':    sendOSC('/ch/' + cue.actionVal + '/mute', [1]); break;
-    case 'unmute':  sendOSC('/ch/' + cue.actionVal + '/mute', [0]); break;
-    case 'fader':   sendOSC('/ch/' + (cue.actionVal || '').split('@')[0] + '/fader', [parseFloat((cue.actionVal || '').split('@')[1] || 0)]); break;
+    case 'scene': {
+      const path = '/scene/recall';
+      const args = [parseInt(cue.actionVal)];
+      console.log('[CONSOLE ACTION] scene →', path, args);
+      sendOSC(path, args);
+      break;
+    }
+    case 'mute': {
+      const path = '/ch/' + cue.actionVal + '/mute';
+      console.log('[CONSOLE ACTION] mute →', path, [1]);
+      sendOSC(path, [1]);
+      break;
+    }
+    case 'unmute': {
+      const path = '/ch/' + cue.actionVal + '/mute';
+      console.log('[CONSOLE ACTION] unmute →', path, [0]);
+      sendOSC(path, [0]);
+      break;
+    }
+    case 'fader': {
+      const ch = (cue.actionVal || '').split('@')[0];
+      const level = parseFloat((cue.actionVal || '').split('@')[1] || 0);
+      const path = '/ch/' + ch + '/fader';
+      console.log('[CONSOLE ACTION] fader →', path, [level]);
+      sendOSC(path, [level]);
+      break;
+    }
   }
 }
 
 function testConnection() {
-  showToast('Testing connection…');
-  sendOSC('/ping', []);
-  setTimeout(() => {
-    if (!state.connected) showToast('No response from console bridge', 'error');
-    else showToast('Console connected!', 'success');
-  }, 1500);
+  const bridgeHost = state.console.ip || 'localhost';
+  const resultEl = document.getElementById('pingResult');
+  const t0 = Date.now();
+  resultEl.style.display = 'block';
+  resultEl.style.background = 'var(--bg3)';
+  resultEl.style.border = '1px solid var(--border)';
+  resultEl.style.color = 'var(--text2)';
+  resultEl.textContent = 'Pinging…';
+  fetch(`http://${bridgeHost}:3000/ping`)
+    .then(r => r.json())
+    .then(data => {
+      const ms = Date.now() - t0;
+      const ok = data.status === 'ok';
+      resultEl.style.background = ok ? 'var(--green-bg)' : 'var(--red-bg)';
+      resultEl.style.border = `1px solid ${ok ? 'var(--green)' : 'var(--red)'}`;
+      resultEl.style.color = ok ? 'var(--green)' : 'var(--red)';
+      resultEl.textContent = JSON.stringify({ status: data.status, dm7_ip: data.dm7_ip, dm7_osc_port: data.dm7_osc_port, timestamp: data.timestamp, response_ms: ms }, null, 2);
+    })
+    .catch(err => {
+      const ms = Date.now() - t0;
+      resultEl.style.background = 'var(--red-bg)';
+      resultEl.style.border = '1px solid var(--red)';
+      resultEl.style.color = 'var(--red)';
+      resultEl.textContent = `fetch failed after ${ms}ms\n${err.message}`;
+    });
 }
 
-function setConsoleStatus(ok) {
+function setConsoleStatus(s) {
   const dot = document.getElementById('oscDot');
   const label = document.getElementById('oscLabel');
-  dot.className = 'osc-dot ' + (ok ? 'connected' : 'error');
-  label.textContent = ok ? 'DM7 LIVE' : 'NO SIGNAL';
+  if (s === true || s === 'live') {
+    dot.className = 'osc-dot connected';
+    label.textContent = 'DM7 LIVE';
+  } else if (s === 'bridge') {
+    dot.className = 'osc-dot amber';
+    label.textContent = 'BRIDGE ONLY';
+  } else {
+    dot.className = 'osc-dot error';
+    label.textContent = 'NO SIGNAL';
+  }
+}
+
+function loadSettingsStatus() {
+  const bridgeHost = state.console.ip || 'localhost';
+  const badge = document.getElementById('bridgeBadge');
+  fetch(`http://${bridgeHost}:3000/status`)
+    .then(r => r.json())
+    .then(data => {
+      badge.textContent = 'bridge online';
+      badge.style.cssText = 'font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green);color:var(--green)';
+      const ipEl = document.getElementById('oscIp');
+      const portEl = document.getElementById('oscPort');
+      if (data.dm7_ip && !ipEl.value) ipEl.value = data.dm7_ip;
+      if (data.dm7_osc_port && !portEl.value) portEl.value = data.dm7_osc_port;
+      const midiRow = document.getElementById('midiDeviceRow');
+      if (data.midi_enabled && data.midi_device_name) {
+        midiRow.style.display = 'block';
+        midiRow.textContent = `MIDI: ${data.midi_device_name}`;
+      }
+    })
+    .catch(() => {
+      badge.textContent = 'bridge offline';
+      badge.style.cssText = 'font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;background:var(--red-bg);border:1px solid var(--red);color:var(--red)';
+    });
+}
+
+function startBridgePoll() {
+  function poll() {
+    const bridgeHost = state.console.ip || 'localhost';
+    fetch(`http://${bridgeHost}:3000/ping`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.dm7_ip) {
+          setConsoleStatus('live');
+        } else {
+          setConsoleStatus('bridge');
+        }
+      })
+      .catch(() => setConsoleStatus(false));
+  }
+  poll();
+  setInterval(poll, 30000);
 }
 
 // ── SETTINGS ──
@@ -1589,11 +1689,30 @@ function loadDemo() {
 
 // ── PANIC ──
 function openPanic() { document.getElementById('panicModal').classList.add('open'); }
-function closePanic() { document.getElementById('panicModal').classList.remove('open'); }
+function closePanic() {
+  const body = document.querySelector('#panicModal .modal-body');
+  const btn = document.querySelector('#panicModal .modal-confirm');
+  body.textContent = 'This will send a mute command to all wireless channels on the DM7. Confirm only in an emergency.';
+  btn.disabled = false;
+  document.getElementById('panicModal').classList.remove('open');
+}
 function executePanic() {
-  closePanic();
-  for (let i = 1; i <= 32; i++) sendOSC(`/ch/${i}/mute`, [1]);
-  showToast('⚠ PANIC — all channels muted', 'error');
+  const bridgeHost = state.console.ip || 'localhost';
+  const body = document.querySelector('#panicModal .modal-body');
+  const btn = document.querySelector('#panicModal .modal-confirm');
+  body.textContent = 'Muting all channels…';
+  btn.disabled = true;
+  fetch(`http://${bridgeHost}:3000/panic`, { method: 'POST' })
+    .then(r => r.json())
+    .then(() => {
+      closePanic();
+      showToast('⚠ PANIC — all channels muted', 'error');
+    })
+    .catch(err => {
+      closePanic();
+      console.warn('[PANIC] bridge unreachable:', err.message);
+      showToast('⚠ PANIC sent (bridge unreachable)', 'error');
+    });
 }
 
 // ── KEYBOARD ──
@@ -1615,6 +1734,7 @@ load();
 applyLoadedState();
 startClock();
 renderCues();
+setTimeout(startBridgePoll, 2000);
 </script>
 </body>
 </html>
