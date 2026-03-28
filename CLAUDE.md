@@ -65,6 +65,12 @@ Edit `.env` with the DM7's actual IP before each show. Default: `192.168.1.100:4
 - Log every command with the `log(tag, msg)` helper in osc-bridge.js — timestamps are required
 - Channel numbers in the UI are 1-indexed; OSC paths use zero-padded 2-digit strings
 
+## Hardware
+- Wireless: Shure ULXD quad receivers, networked via Dante
+- ULXD units accessible via Shure UDP command protocol (port 2202)
+- Dante network carries both audio and device management
+- OSC handles console control, ULXD protocol handles receiver telemetry
+
 ## What NOT to do
 - Do not add a frontend framework (React, Vue, etc.) — the single-file constraint is intentional
 - Do not commit `.env` — it contains show-specific IP addresses
