@@ -71,6 +71,11 @@ Edit `.env` with the DM7's actual IP before each show. Default: `192.168.1.100:4
 - Dante network carries both audio and device management
 - OSC handles console control, ULXD protocol handles receiver telemetry
 
+## Session rules
+- At the end of every session, stage all changed files, commit with a
+  descriptive message, and push to origin
+- Never leave modified files uncommitted at session end
+
 ## What NOT to do
 - Do not add a frontend framework (React, Vue, etc.) — the single-file constraint is intentional
 - Do not commit `.env` — it contains show-specific IP addresses
