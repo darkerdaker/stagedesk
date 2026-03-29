@@ -541,6 +541,10 @@
   .ch-rf-bar.b3 { height: 10px; }
   .ch-freq-live { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 3px; }
   .ch-freq-live.mismatch { color: var(--red); font-weight: 600; }
+  .ch-updated { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 3px; opacity: 0.45; }
+  .ulxd-badge { font-family: var(--mono); font-size: 11px; padding: 2px 9px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+  .ulxd-badge.live { color: var(--green); border-color: var(--green); background: var(--green-bg); }
+  .ulxd-badge.offline { color: var(--text3); border-color: var(--border); background: var(--bg2); }
 
   /* ── SCENE LIST PAGE ── */
   .scenes-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
@@ -1023,6 +1027,7 @@
             <span style="color:var(--red);">●</span> RF issue &nbsp;
             <span style="color:var(--text3);">●</span> off
           </span>
+          <span class="ulxd-badge offline" id="ulxdBadge">ULXD OFFLINE</span>
           <button class="btn sm" onclick="addChannel()">+ Add channel</button>
         </div>
       </div>
@@ -1275,8 +1280,10 @@ function showPage(p) {
   if (nb) nb.classList.add('active');
   const mb = document.getElementById('mnav-' + p);
   if (mb) mb.classList.add('active');
+  const leaving = currentPage;
   currentPage = p;
-  if (p === 'channels') { fetchULXD(); renderChannels(); }
+  if (p === 'channels') { startULXDPoll(); renderChannels(); }
+  else if (leaving === 'channels') stopULXDPoll();
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
   if (p === 'a2swap') renderA2Swap();
@@ -1995,18 +2002,21 @@ function fetchULXD() {
 }
 
 function setULXDStatus(s) {
-  const el  = document.getElementById('ulxdIndicator');
-  const dot = document.getElementById('ulxdDot');
-  const lbl = document.getElementById('ulxdLabel');
+  const el    = document.getElementById('ulxdIndicator');
+  const dot   = document.getElementById('ulxdDot');
+  const lbl   = document.getElementById('ulxdLabel');
+  const badge = document.getElementById('ulxdBadge');
   if (s === 'ok' && ulxdLastPoll) {
     el.classList.add('visible');
     dot.className = 'osc-dot connected';
     const t = ulxdLastPoll;
     lbl.textContent = `ULXD ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+    if (badge) { badge.className = 'ulxd-badge live'; badge.textContent = 'ULXD LIVE'; }
   } else if (s === 'error') {
     el.classList.add('visible');
     dot.className = 'osc-dot error';
     lbl.textContent = 'ULXD ERR';
+    if (badge) { badge.className = 'ulxd-badge offline'; badge.textContent = 'ULXD OFFLINE'; }
   }
 }
 
@@ -2026,9 +2036,16 @@ function checkBatteryAlerts() {
   });
 }
 
+let _ulxdPollTimer = null;
+
 function startULXDPoll() {
-  fetchULXD();
-  setInterval(fetchULXD, 30000);
+  fetchULXD(); // always fire immediately (e.g. on channels page open)
+  if (_ulxdPollTimer) return; // timer already running — don't double-start
+  _ulxdPollTimer = setInterval(fetchULXD, 30000);
+}
+
+function stopULXDPoll() {
+  if (_ulxdPollTimer) { clearInterval(_ulxdPollTimer); _ulxdPollTimer = null; }
 }
 
 // ── helpers for card telemetry rendering ──
@@ -2084,9 +2101,16 @@ function cardTelemetry(chNum, plotFreq) {
 
   if (!battHtml && !rfHtml && !freqHtml) return '';
 
+  let updatedHtml = '';
+  if (ulxdLastPoll) {
+    const tp = ulxdLastPoll;
+    updatedHtml = `<div class="ch-updated">${String(tp.getHours()).padStart(2,'0')}:${String(tp.getMinutes()).padStart(2,'0')}:${String(tp.getSeconds()).padStart(2,'0')}</div>`;
+  }
+
   let out = '';
   if (battHtml || rfHtml) out += `<div class="ch-telemetry">${battHtml}${rfHtml}</div>`;
   out += freqHtml;
+  out += updatedHtml;
   return out;
 }
 
