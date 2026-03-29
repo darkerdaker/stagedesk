@@ -86,6 +86,26 @@ and talking points for the technical team.
 - **ULXD topbar indicator** — small pill shows last poll time (HH:MM) with
   green dot, or ULXD ERR in red if bridge unreachable
 
+## UI design
+
+- **DM7-inspired theatrical aesthetic (Option B)** — warm charcoal palette with Yamaha cyan
+  (`#00b4d8`) as primary accent; amber (`#e8850a`) for action/GO; hard rectangular geometry,
+  zero border-radius, 1px borders throughout
+- **Topbar** — `DM7 · STAGEDESK` branding, 2px cyan bottom border, all-caps show name,
+  rectangular status pills
+- **Sidebar** — 48px width, all-caps text labels (CUE / CH / SCN / FLOW / SWAP / SET),
+  3px cyan left border on active state, PANIC button at bottom
+- **Active cue billboard** — amber GO button, cyan character name, 20px cue line
+- **Cue rows** — 3px cyan left border on active, amber/red for urgency, flat rectangular action badges
+- **Channel cards** — top-accent border (green/amber/red by status), `LIVE`/`SWAP`/`RF!`/`OFF`
+  badge replaces status dot, battery and RF bars remain
+- **Scene list** — 3px cyan left border on current scene, `▶ RECALL` button fills cyan on hover
+- **Show flow** — centered act headers with full-width rule lines, intermission in amber
+- **Settings** — cyan section headers, flat rectangular inputs, `ONLINE`/`OFFLINE` status badges
+- **Mini channel strip** — persistent 36px bar shows first 8 configured wireless channels with
+  name, number, and color-coded status dot; tapping opens channel editor; hidden if no channels
+- **Mobile nav** — cyan active state with top border, all-caps labels
+
 ## Planned / upcoming
 - [ ] Real DM7 + ULXD test at the theatre
 - [ ] Channel editor — frequency assignment from ULXD scan
