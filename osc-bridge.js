@@ -5,6 +5,9 @@ const osc = require('osc');
 const midi = require('midi');
 const dgram = require('dgram');
 const https = require('https');
+const multer = require('multer');
+const pdfParse = require('pdf-parse');
+const Anthropic = require('@anthropic-ai/sdk');
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const DM7_IP         = process.env.DM7_IP          || '192.168.1.100';
@@ -17,6 +20,128 @@ const PUSHOVER_TOKEN      = process.env.PUSHOVER_TOKEN  || '';
 const PUSHOVER_GROUP      = process.env.PUSHOVER_GROUP  || '';
 const BATTERY_WARN_BARS     = parseInt(process.env.BATTERY_WARN_BARS,     10) || 2;
 const BATTERY_CRITICAL_BARS = parseInt(process.env.BATTERY_CRITICAL_BARS, 10) || 1;
+const ANTHROPIC_API_KEY     = process.env.ANTHROPIC_API_KEY || '';
+
+// ── Multer (PDF uploads, memory storage) ─────────────────────────────────────
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are accepted'));
+    }
+  },
+});
+
+// ── AI Script Analysis — system prompt ───────────────────────────────────────
+const SCRIPT_SYSTEM_PROMPT = `You are an expert theatrical sound engineer and production assistant. You are analyzing a Broadway/musical theatre script to build a complete show file for StageDesk, a professional audio production tool used by A1 and A2 engineers.
+
+Analyze the script and return ONLY valid JSON with this exact structure — no markdown, no explanation, just the JSON object:
+
+{
+  "show": {
+    "title": "show title from script",
+    "totalActs": 2
+  },
+  "characters": [
+    {
+      "name": "CHARACTER NAME",
+      "lineCount": 47,
+      "sceneCount": 8,
+      "songCount": 3,
+      "micRecommendation": "lead|supporting|ensemble|none",
+      "suggestedChannel": 1,
+      "reason": "47 lines across 8 scenes including 3 songs — principal role"
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Act 1 Opening",
+      "act": "Act 1",
+      "sceneNumber": 1,
+      "type": "scene|song|transition",
+      "songTitle": "Into the Woods",
+      "characters": ["BAKER", "CINDERELLA"],
+      "dmScene": 1,
+      "notes": "Full company opening number"
+    }
+  ],
+  "cues": [
+    {
+      "scene": "Act 1 · Sc1",
+      "character": "Baker",
+      "line": "We need to find the items...",
+      "action": "unmute|mute|scene|fader|swap|note",
+      "actionVal": "1",
+      "urgency": "normal|warn|critical",
+      "cueReason": "Baker first entry Act 1"
+    }
+  ],
+  "swapWindows": [
+    {
+      "character": "Rapunzel",
+      "actor": "",
+      "fromScene": "Act 1 Finale",
+      "toScene": "Act 2 Opening",
+      "scenesOffstage": 2,
+      "recommendation": "Battery swap window — 2 scenes offstage"
+    }
+  ],
+  "flow": [
+    {
+      "name": "Prologue",
+      "act": "Act 1",
+      "type": "scene|song|intermission",
+      "estTime": "2:30",
+      "notes": ""
+    }
+  ]
+}
+
+Rules for analysis:
+CHARACTERS:
+- Count every spoken line per character
+- Count scene appearances
+- Count songs (ALL CAPS dialogue blocks = songs)
+- micRecommendation logic:
+  lead = top 25% by line count AND appears in 3+ scenes
+  supporting = moderate lines OR key plot scenes
+  ensemble = group numbers, few individual lines
+  none = stage directions only, non-speaking
+- Assign suggestedChannel in order of prominence (lead characters get lowest channel numbers)
+- Provide a specific reason for every recommendation
+
+SCENES:
+- Extract every scene heading and act break
+- Identify songs by ALL CAPS dialogue blocks
+- Note which characters appear in each scene
+- Assign sequential dmScene numbers starting at 1
+- Add intermission as its own scene entry
+
+CUES (generate ALL of these):
+- Scene recall cue at the START of every scene (critical urgency)
+- Unmute cue for EVERY character on their FIRST line in each scene
+- Mute cue when a character has no more lines in a scene and stage directions indicate exit (warn urgency)
+- For songs: unmute all singing characters before the first lyric (critical urgency — early warning)
+- Fader cue suggestions for solos within ensemble numbers
+- A2 NOTE cues for mic swaps during swap windows
+- Intermission: mute all active channels (critical)
+- Act 2 opening: unmute based on who opens Act 2 (critical)
+
+SWAP WINDOWS:
+- Identify every character who exits and does not return for 2+ scenes
+- Flag battery swap opportunities
+- Note if it's a quick change (1 scene offstage = warn)
+
+FLOW:
+- Every scene and song in order
+- Estimate scene time: dialogue scenes 2-4 min, songs 2-5 min, finales 5-8 min
+- Intermission always 15:00
+- Include act totals
+
+Be thorough. A real show has 50-150 cues. Generate all of them.`;
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 function log(tag, msg) {
@@ -360,13 +485,89 @@ app.post('/panic', (req, res) => {
   }
 });
 
+// POST /ai/parse-script — upload a PDF script, get back a structured show JSON
+// Accepts multipart/form-data with field name "script" containing a PDF file.
+app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
+  log('HTTP', 'POST /ai/parse-script');
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded. Send a PDF as multipart field "script".' });
+  }
+
+  // Step 1 — extract text from PDF
+  let rawText;
+  try {
+    const data = await pdfParse(req.file.buffer);
+    rawText = data.text;
+    log('AI', `PDF extracted: ${rawText.length} chars, ${data.numpages} page(s)`);
+  } catch (err) {
+    log('AI', `PDF parse error: ${err.message}`);
+    return res.status(422).json({
+      error: 'Could not extract text from PDF. Is it a scanned image? Try a text-based PDF.',
+      rawText: null,
+    });
+  }
+
+  if (!rawText || rawText.trim().length < 50) {
+    return res.status(422).json({
+      error: 'Could not extract text from PDF. Is it a scanned image? Try a text-based PDF.',
+      rawText: rawText || '',
+    });
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({
+      error: 'ANTHROPIC_API_KEY not set in .env — add your key to enable AI import.',
+      rawText: rawText.slice(0, 2000),
+    });
+  }
+
+  // Step 2 — send to Claude for analysis
+  let showData;
+  try {
+    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+    log('AI', 'Sending to Claude API...');
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: SCRIPT_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: rawText.slice(0, 100000) }],
+    });
+
+    const content = message.content[0].text.trim();
+    log('AI', `Claude response: ${content.length} chars`);
+
+    // Step 3 — parse the JSON response
+    try {
+      showData = JSON.parse(content);
+    } catch (_) {
+      const m = content.match(/\{[\s\S]+\}/);
+      if (m) {
+        showData = JSON.parse(m[0]);
+      } else {
+        throw new Error('Claude response did not contain valid JSON');
+      }
+    }
+  } catch (err) {
+    log('AI', `Claude API error: ${err.message}`);
+    return res.status(500).json({ error: `Claude API error: ${err.message}`, rawText: rawText.slice(0, 2000) });
+  }
+
+  const chars  = (showData.characters  || []).length;
+  const scenes = (showData.scenes      || []).length;
+  const cues   = (showData.cues        || []).length;
+  log('AI', `Parse complete — ${chars} characters, ${scenes} scenes, ${cues} cues`);
+  res.json({ status: 'ok', showData });
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 initMidi();
 
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  POST /osc  POST /midi  POST /panic');
+  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
+  log('SERVER', `AI script import: ${ANTHROPIC_API_KEY ? 'enabled' : 'disabled (set ANTHROPIC_API_KEY in .env)'}`);
   log('SERVER', `Pushover: ${(PUSHOVER_TOKEN && PUSHOVER_GROUP) ? `enabled (warn≤${BATTERY_WARN_BARS} critical≤${BATTERY_CRITICAL_BARS})` : 'disabled (set PUSHOVER_TOKEN + PUSHOVER_GROUP in .env)'}`);
   if (ULXD_IPS.length > 0) {
     log('SERVER', `ULXD receivers (port ${ULXD_PORT}): ${ULXD_IPS.join(', ')}`);

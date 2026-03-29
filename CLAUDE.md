@@ -85,6 +85,16 @@ Edit `.env` with the DM7's actual IP before each show. Default: `192.168.1.100:4
 - Priority 2 (emergency) requires `retry` + `expire` params — always include them
 - Debounce key format: `"<ip>:<slot>:<tier>"` where tier is `warn` or `critical`
 
+## AI Script Import
+- `POST /ai/parse-script` — multipart PDF upload, field name `script`
+- Uses `pdf-parse` for text extraction, `multer` for upload handling
+- Calls Claude API (`claude-sonnet-4-6`, max_tokens 4000) via `@anthropic-ai/sdk`
+- Returns `{ status: 'ok', showData }` with full structured show JSON
+- `ANTHROPIC_API_KEY` in `.env` — required; endpoint returns 500 with `rawText` if not set
+- PDF extract fails → 422 with error message (prompt TD to use text-based PDF)
+- Claude API error → 500 with `rawText` snippet so TD can use manual import as fallback
+- Frontend preview panel opens before committing — TD can edit mic recommendations inline
+
 ## What NOT to do
 - Do not add a frontend framework (React, Vue, etc.) — the single-file constraint is intentional
 - Do not commit `.env` — it contains show-specific IP addresses

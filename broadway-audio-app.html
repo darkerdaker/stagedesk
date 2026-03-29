@@ -799,6 +799,167 @@
   }
   .script-textarea:focus { border-color: var(--cyan); }
 
+  /* ── AI IMPORT ── */
+  .ai-drop-zone {
+    border: 2px dashed var(--border2);
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    background: var(--bg3);
+    user-select: none;
+  }
+  .ai-drop-zone.dragover { border-color: var(--amber); background: var(--amber-bg); }
+  .ai-drop-zone.has-file { border-color: var(--cyan); background: var(--cyan-bg); }
+  .ai-drop-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .ai-drop-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+  .ai-file-info { margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--cyan); letter-spacing: 0.06em; }
+  .ai-progress {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .ai-progress-step { color: var(--text3); padding: 1px 0; letter-spacing: 0.04em; }
+  .ai-progress-step.active { color: var(--amber); }
+  .ai-progress-step.done { color: var(--green); }
+  .ai-progress-step.done::before { content: '✓ '; }
+  .ai-progress-step.active::before { content: '▶ '; }
+
+  /* ── AI PREVIEW OVERLAY ── */
+  .ai-preview-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 600;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ai-preview-overlay.open { display: block; }
+  .ai-preview-panel {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    max-width: 900px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .ai-preview-header {
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--amber);
+    background: var(--bg2);
+  }
+  .ai-preview-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .ai-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+  .ai-stat { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+  .ai-stat span { color: var(--cyan); font-weight: 600; }
+  .ai-preview-body { padding: 14px 18px; display: flex; flex-direction: column; gap: 16px; }
+  .ai-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+  }
+  /* Mic plot table */
+  .mic-plot-wrap { overflow-x: auto; }
+  .mic-plot-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; min-width: 600px; }
+  .mic-plot-table th {
+    text-align: left;
+    color: var(--text3);
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .mic-plot-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .mic-plot-table tr:hover td { background: var(--bg2); }
+  .mic-rec-lead { color: var(--cyan); font-weight: 600; }
+  .mic-rec-supporting { color: var(--amber); }
+  .mic-rec-ensemble { color: var(--green); }
+  .mic-rec-none { color: var(--text3); }
+  .mic-edit-input {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 5px;
+    width: 100%;
+    outline: none;
+  }
+  .mic-edit-input:focus { border-color: var(--cyan); }
+  .mic-rec-select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 4px;
+    outline: none;
+  }
+  .mic-rec-select:focus { border-color: var(--cyan); }
+  /* Scene preview */
+  .ai-scene-list { display: flex; flex-direction: column; gap: 2px; max-height: 180px; overflow-y: auto; }
+  .ai-scene-item { display: flex; align-items: center; gap: 8px; padding: 3px 8px; background: var(--bg2); font-family: var(--mono); font-size: 11px; }
+  .ai-scene-num { color: var(--text3); min-width: 22px; text-align: right; font-size: 10px; }
+  .ai-scene-name { color: var(--text); flex: 1; }
+  .ai-scene-badge { font-size: 9px; letter-spacing: 0.07em; text-transform: uppercase; padding: 1px 5px; border: 1px solid var(--border2); color: var(--text3); white-space: nowrap; }
+  .ai-scene-badge.song { border-color: var(--amber); color: var(--amber); }
+  .ai-scene-badge.intermission { border-color: var(--purple); color: var(--purple); }
+  .ai-scene-chars { color: var(--text3); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+  /* Cue summary */
+  .ai-cue-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ai-cue-stat { font-family: var(--mono); font-size: 11px; color: var(--text2); padding: 4px 8px; background: var(--bg2); border: 1px solid var(--border); }
+  .ai-cue-stat span { color: var(--cyan); }
+  .ai-cue-preview { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+  .ai-cue-row { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: var(--bg2); font-family: var(--mono); font-size: 10px; color: var(--text2); }
+  .ai-cue-scene { color: var(--text3); min-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ai-cue-char { color: var(--cyan); min-width: 80px; }
+  .ai-cue-action { color: var(--amber); min-width: 60px; }
+  .ai-cue-urg-warn { color: var(--amber); }
+  .ai-cue-urg-critical { color: var(--red); }
+  /* Swap windows */
+  .ai-swap-list { display: flex; flex-direction: column; gap: 4px; }
+  .ai-swap-item { padding: 8px; background: var(--bg2); border-left: 3px solid var(--amber); }
+  .ai-swap-char { font-family: var(--mono); font-size: 12px; color: var(--text); margin-bottom: 2px; }
+  .ai-swap-detail { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .ai-swap-item.quick { border-left-color: var(--red); }
+  /* Preview actions */
+  .ai-preview-actions {
+    display: flex;
+    gap: 10px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    position: sticky;
+    bottom: 0;
+  }
+
   /* ── PANIC MODAL ── */
   .modal-overlay {
     display: none;
@@ -1244,15 +1405,30 @@
         </div>
 
         <div class="settings-section">
-          <div class="settings-label">Import script / show data</div>
-          <div class="settings-card">
-            <div style="font-size:13px;color:var(--text2);margin-bottom:4px;">Paste script cues (one per line)</div>
-            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">
-              Format: SCENE | CHARACTER | line text | action:value | urgency<br>
-              Example: Act1Sc2 | Maria | "The hills are alive…" | unmute:ch3 | normal
+          <div class="settings-label" style="display:flex;align-items:center;gap:8px;">
+            AI script import
+            <span style="font-family:var(--mono);font-size:9px;padding:1px 6px;background:var(--amber-bg);border:1px solid var(--amber);color:var(--amber);letter-spacing:0.1em;text-transform:uppercase;">AI</span>
+          </div>
+          <div class="settings-card" style="gap:8px;">
+            <div
+              class="ai-drop-zone"
+              id="aiDropZone"
+              ondragover="aiDragOver(event)"
+              ondragleave="aiDragLeave(event)"
+              ondrop="aiDrop(event)"
+              onclick="document.getElementById('pdfFileInput').click()"
+            >
+              <div class="ai-drop-title">Drop script PDF here or click to browse</div>
+              <div class="ai-drop-sub">.pdf only — text-based scripts only, not scanned images</div>
+              <div class="ai-file-info" id="aiFileInfo"></div>
             </div>
-            <textarea class="script-textarea" id="scriptImport" placeholder="Paste formatted script here…"></textarea>
-            <button class="btn sm primary" onclick="importScript()">Import script</button>
+            <button class="btn sm" id="aiAnalyzeBtn" onclick="analyzeWithAI()" style="color:var(--amber);border-color:var(--amber);opacity:0.4;pointer-events:none;width:100%;font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase;">Analyze with AI</button>
+            <div class="ai-progress" id="aiProgress">
+              <div class="ai-progress-step" id="aiStep1">Step 1: Extracting text from PDF...</div>
+              <div class="ai-progress-step" id="aiStep2">Step 2: Analyzing script with Claude AI...</div>
+              <div class="ai-progress-step" id="aiStep3">Step 3: Building show file...</div>
+            </div>
+            <div id="aiError" style="display:none;padding:8px;font-family:var(--mono);font-size:11px;background:var(--red-bg);border:1px solid var(--red);color:var(--red);"></div>
           </div>
         </div>
 
@@ -1334,10 +1510,64 @@
   </div>
 </div>
 
+<!-- AI PREVIEW OVERLAY -->
+<div class="ai-preview-overlay" id="aiPreviewOverlay">
+  <div class="ai-preview-panel">
+    <div class="ai-preview-header">
+      <div class="ai-preview-title" id="aiPreviewTitle">AI Analysis Complete</div>
+      <div class="ai-stats" id="aiPreviewStats"></div>
+    </div>
+    <div class="ai-preview-body">
+
+      <div>
+        <div class="ai-section-label">Mic plot — edit inline before loading</div>
+        <div class="mic-plot-wrap">
+          <table class="mic-plot-table">
+            <thead>
+              <tr>
+                <th>CH</th>
+                <th>Character</th>
+                <th>Lines</th>
+                <th>Scenes</th>
+                <th>Songs</th>
+                <th>Recommendation</th>
+                <th style="min-width:180px;">Reason</th>
+              </tr>
+            </thead>
+            <tbody id="micPlotBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="ai-section-label">Scene list</div>
+        <div class="ai-scene-list" id="aiSceneList"></div>
+      </div>
+
+      <div>
+        <div class="ai-section-label">Cue summary</div>
+        <div class="ai-cue-summary" id="aiCueSummary"></div>
+        <div class="ai-cue-preview" id="aiCuePreview"></div>
+      </div>
+
+      <div>
+        <div class="ai-section-label">Battery swap windows</div>
+        <div class="ai-swap-list" id="aiSwapList"></div>
+      </div>
+
+    </div>
+    <div class="ai-preview-actions">
+      <button class="btn" onclick="loadAIShow()" style="color:var(--amber);border-color:var(--amber);font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase;padding:10px 24px;">Load show</button>
+      <button class="btn" onclick="cancelAIPreview()" style="color:var(--text3);border-color:var(--border2);font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <input type="file" id="jsonFileInput" style="display:none" accept=".json" onchange="handleJSONImport(event)" />
+<input type="file" id="pdfFileInput" style="display:none" accept=".pdf" onchange="handlePDFSelect(event)" />
 
 <script>
 // ── STATE ──
@@ -1918,6 +2148,283 @@ function importScript() {
   save();
   showToast(`Imported ${added} cues`, 'success');
   document.getElementById('scriptImport').value = '';
+}
+
+// ── AI SCRIPT IMPORT ──
+let _aiSelectedFile = null;
+let _aiShowData     = null;
+
+function aiDragOver(e) {
+  e.preventDefault();
+  document.getElementById('aiDropZone').classList.add('dragover');
+}
+function aiDragLeave(e) {
+  document.getElementById('aiDropZone').classList.remove('dragover');
+}
+function aiDrop(e) {
+  e.preventDefault();
+  const zone = document.getElementById('aiDropZone');
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.toLowerCase().endsWith('.pdf')) {
+    setPDFFile(file);
+  } else {
+    showToast('PDF files only', 'error');
+  }
+}
+function handlePDFSelect(e) {
+  const file = e.target.files[0];
+  if (file) setPDFFile(file);
+  e.target.value = '';
+}
+function setPDFFile(file) {
+  _aiSelectedFile = file;
+  const zone = document.getElementById('aiDropZone');
+  zone.classList.add('has-file');
+  const sizeKB = Math.round(file.size / 1024);
+  document.getElementById('aiFileInfo').textContent = `${file.name}  (${sizeKB} KB)`;
+  const btn = document.getElementById('aiAnalyzeBtn');
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+  hideAIError();
+}
+
+function setAIStep(n) {
+  const prog = document.getElementById('aiProgress');
+  prog.style.display = 'flex';
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('aiStep' + i);
+    el.className = 'ai-progress-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+function hideAIError() {
+  const el = document.getElementById('aiError');
+  el.style.display = 'none';
+}
+function showAIError(msg) {
+  const el = document.getElementById('aiError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('aiProgress').style.display = 'none';
+}
+
+async function analyzeWithAI() {
+  if (!_aiSelectedFile) { showToast('Select a PDF first', 'error'); return; }
+
+  hideAIError();
+  const btn = document.getElementById('aiAnalyzeBtn');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+
+  setAIStep(1);
+
+  const bridgeHost = state.console.ip || 'localhost';
+  const formData   = new FormData();
+  formData.append('script', _aiSelectedFile);
+
+  setAIStep(2);
+  let result;
+  try {
+    const resp = await fetch(`http://${bridgeHost}:3000/ai/parse-script`, {
+      method: 'POST',
+      body: formData,
+    });
+    result = await resp.json();
+  } catch (err) {
+    showAIError(`Bridge unreachable: ${err.message}\n\nMake sure osc-bridge.js is running.`);
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    return;
+  }
+
+  if (!result.status || result.status !== 'ok' || !result.showData) {
+    showAIError(result.error || 'Unknown error from bridge.\n\n' + (result.rawText ? 'Extracted text preview:\n' + result.rawText.slice(0, 400) : ''));
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    return;
+  }
+
+  setAIStep(3);
+  _aiShowData = result.showData;
+
+  // Small delay so TD sees step 3 flash before preview opens
+  setTimeout(() => {
+    document.getElementById('aiProgress').style.display = 'none';
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    openAIPreview(_aiShowData);
+  }, 400);
+}
+
+function openAIPreview(d) {
+  const show  = d.show     || {};
+  const chars = d.characters || [];
+  const scenes = d.scenes   || [];
+  const cues  = d.cues      || [];
+  const swaps = d.swapWindows || [];
+
+  // Header
+  document.getElementById('aiPreviewTitle').textContent =
+    'AI Analysis Complete' + (show.title ? ' — ' + show.title.toUpperCase() : '');
+  document.getElementById('aiPreviewStats').innerHTML =
+    `<div class="ai-stat"><span>${chars.length}</span> characters</div>` +
+    `<div class="ai-stat"><span>${scenes.length}</span> scenes</div>` +
+    `<div class="ai-stat"><span>${cues.length}</span> cues</div>` +
+    `<div class="ai-stat"><span>${(d.flow || []).filter(f => f.type === 'song').length}</span> songs</div>` +
+    `<div class="ai-stat"><span>${swaps.length}</span> swap windows</div>`;
+
+  // Mic plot
+  const recClass = r => ({ lead:'mic-rec-lead', supporting:'mic-rec-supporting', ensemble:'mic-rec-ensemble', none:'mic-rec-none' }[r] || '');
+  const tbody = document.getElementById('micPlotBody');
+  tbody.innerHTML = chars.map((c, i) => `
+    <tr data-idx="${i}">
+      <td><input class="mic-edit-input" style="width:44px" value="${esc(String(c.suggestedChannel || i+1))}" onchange="aiUpdateChar(${i},'suggestedChannel',this.value)" /></td>
+      <td><span style="font-family:var(--mono);font-size:11px;">${esc(c.name)}</span></td>
+      <td style="text-align:right;color:var(--text2);">${c.lineCount || 0}</td>
+      <td style="text-align:right;color:var(--text2);">${c.sceneCount || 0}</td>
+      <td style="text-align:right;color:var(--text2);">${c.songCount || 0}</td>
+      <td>
+        <select class="mic-rec-select ${recClass(c.micRecommendation)}" onchange="aiUpdateChar(${i},'micRecommendation',this.value);this.className='mic-rec-select '+({lead:'mic-rec-lead',supporting:'mic-rec-supporting',ensemble:'mic-rec-ensemble',none:'mic-rec-none'}[this.value]||'')">
+          <option value="lead"${c.micRecommendation==='lead'?' selected':''}>LEAD</option>
+          <option value="supporting"${c.micRecommendation==='supporting'?' selected':''}>SUPPORTING</option>
+          <option value="ensemble"${c.micRecommendation==='ensemble'?' selected':''}>ENSEMBLE</option>
+          <option value="none"${c.micRecommendation==='none'?' selected':''}>NONE</option>
+        </select>
+      </td>
+      <td><input class="mic-edit-input" value="${esc(c.reason || '')}" onchange="aiUpdateChar(${i},'reason',this.value)" /></td>
+    </tr>`).join('');
+
+  // Scene list
+  document.getElementById('aiSceneList').innerHTML = scenes.map(s => {
+    const badge = s.type === 'song' ? `<span class="ai-scene-badge song">SONG</span>`
+                : s.type === 'intermission' ? `<span class="ai-scene-badge intermission">INT</span>`
+                : `<span class="ai-scene-badge">SCN</span>`;
+    const chars = (s.characters || []).slice(0, 5).join(', ');
+    return `<div class="ai-scene-item">
+      <span class="ai-scene-num">${s.dmScene || s.sceneNumber || ''}</span>
+      <span class="ai-scene-name">${esc(s.name)}</span>
+      ${badge}
+      <span class="ai-scene-chars">${esc(chars)}</span>
+    </div>`;
+  }).join('');
+
+  // Cue summary
+  const counts = { scene:0, unmute:0, mute:0, swap:0, note:0, fader:0, other:0 };
+  cues.forEach(c => {
+    const a = c.action || 'other';
+    if (counts[a] !== undefined) counts[a]++; else counts.other++;
+  });
+  document.getElementById('aiCueSummary').innerHTML =
+    Object.entries(counts).filter(([,v])=>v>0).map(([k,v]) =>
+      `<div class="ai-cue-stat"><span>${v}</span> ${k}</div>`
+    ).join('');
+
+  const first5 = cues.slice(0, 5);
+  document.getElementById('aiCuePreview').innerHTML = first5.map(c => {
+    const urgCls = c.urgency === 'critical' ? 'ai-cue-urg-critical' : c.urgency === 'warn' ? 'ai-cue-urg-warn' : '';
+    return `<div class="ai-cue-row">
+      <span class="ai-cue-scene">${esc(c.scene)}</span>
+      <span class="ai-cue-char">${esc(c.character)}</span>
+      <span class="ai-cue-action">${esc(c.action)}${c.actionVal ? ':'+esc(c.actionVal) : ''}</span>
+      <span class="${urgCls}">${esc(c.urgency||'')}</span>
+    </div>`;
+  }).join('') + (cues.length > 5 ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:4px 8px;">...and ${cues.length - 5} more cues</div>` : '');
+
+  // Swap windows
+  document.getElementById('aiSwapList').innerHTML = swaps.length === 0
+    ? '<div style="font-family:var(--mono);font-size:11px;color:var(--text3);">No swap windows identified.</div>'
+    : swaps.map(sw => {
+        const quick = sw.scenesOffstage === 1;
+        return `<div class="ai-swap-item${quick?' quick':''}">
+          <div class="ai-swap-char">${esc(sw.character)}${sw.actor ? ' — ' + esc(sw.actor) : ''}</div>
+          <div class="ai-swap-detail">${esc(sw.fromScene)} → ${esc(sw.toScene)} · ${sw.scenesOffstage || '?'} scene${sw.scenesOffstage===1?'':'s'} offstage${quick?' · QUICK CHANGE':''}</div>
+          <div class="ai-swap-detail" style="color:var(--text2);margin-top:2px;">${esc(sw.recommendation || '')}</div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('aiPreviewOverlay').classList.add('open');
+}
+
+function aiUpdateChar(idx, field, val) {
+  if (!_aiShowData || !_aiShowData.characters) return;
+  _aiShowData.characters[idx][field] = field === 'suggestedChannel' ? parseInt(val, 10) || (idx + 1) : val;
+}
+
+function cancelAIPreview() {
+  document.getElementById('aiPreviewOverlay').classList.remove('open');
+}
+
+function loadAIShow() {
+  if (!_aiShowData) return;
+  const d = _aiShowData;
+
+  // Show info
+  if (d.show && d.show.title) {
+    state.show.name = d.show.title;
+    document.getElementById('showNameDisplay').textContent = state.show.name;
+    document.getElementById('showNameInput').value = state.show.name;
+  }
+
+  // Channels from mic plot
+  state.channels = (d.characters || [])
+    .filter(c => c.micRecommendation !== 'none')
+    .map(c => ({
+      num:       c.suggestedChannel || 1,
+      actor:     '',
+      character: c.name,
+      freq:      '',
+      status:    'active',
+    }));
+
+  // Scenes
+  state.scenes = (d.scenes || []).map(s => ({
+    name:    s.name,
+    dmScene: String(s.dmScene || s.sceneNumber || ''),
+    notes:   s.notes || '',
+    current: false,
+  }));
+
+  // Cues
+  state.cues = (d.cues || []).map(c => ({
+    scene:     c.scene    || '',
+    character: c.character || '',
+    line:      c.line      || (c.cueReason || ''),
+    action:    c.action    || 'note',
+    actionVal: String(c.actionVal || ''),
+    urgency:   c.urgency   || 'normal',
+  }));
+
+  // Flow
+  state.flow = (d.flow || []).map(f => ({
+    name:    f.name,
+    act:     f.act || '',
+    type:    f.type || 'scene',
+    estTime: f.estTime || '',
+    notes:   f.notes || '',
+  }));
+
+  // Also add swap cues for A2 from swapWindows
+  (d.swapWindows || []).forEach(sw => {
+    state.cues.push({
+      scene:     sw.fromScene || '',
+      character: sw.character || '',
+      line:      sw.recommendation || 'Battery swap window',
+      action:    'swap',
+      actionVal: sw.character || '',
+      urgency:   sw.scenesOffstage === 1 ? 'critical' : 'warn',
+    });
+  });
+
+  state.activeCue = -1;
+  cancelAIPreview();
+  applyLoadedState();
+  save();
+
+  const nCues   = state.cues.length;
+  const nCh     = state.channels.length;
+  const nScenes = state.scenes.length;
+  showToast(`Show loaded — ${nCues} cues, ${nCh} channels, ${nScenes} scenes`, 'success');
+  setTimeout(() => showPage('cues'), 600);
 }
 
 // ── DATA EXPORT/IMPORT ──

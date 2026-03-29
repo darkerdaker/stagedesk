@@ -106,6 +106,26 @@ and talking points for the technical team.
   name, number, and color-coded status dot; tapping opens channel editor; hidden if no channels
 - **Mobile nav** — cyan active state with top border, all-caps labels
 
+## AI Features
+
+- **AI script import** — upload a PDF script; Claude analyzes it and builds a complete
+  show file automatically (channels, scenes, cues, flow, swap windows)
+- **Mic plot suggestions with reasoning** — every character gets a mic recommendation
+  (lead / supporting / ensemble / none) based on line count × scene appearances, with
+  a human-readable reason for each decision
+- **Automatic song detection** — ALL CAPS dialogue blocks identified as songs; song
+  scenes tagged and singers pre-unmuted with critical urgency before first lyric
+- **Full cue generation** — scene recalls, character unmutes/mutes per scene, fader
+  suggestions for solos, A2 swap notes, intermission mute-all, Act 2 opening unmutes
+- **Battery swap window detection** — characters offstage 2+ scenes flagged with
+  window duration; quick changes (1 scene) highlighted in red
+- **Show flow with estimated timings** — every scene and song in order with estimated
+  runtime; intermission always 15:00; act totals included
+- **TD review screen before committing** — editable mic plot table, scene list,
+  cue summary, and swap window list shown before any data is overwritten
+- **Graceful fallback on errors** — if Claude API fails, raw extracted PDF text is
+  returned so TD can use the manual text-paste import as fallback
+
 ## Planned / upcoming
 - [ ] Real DM7 + ULXD test at the theatre
 - [ ] Channel editor — frequency assignment from ULXD scan
