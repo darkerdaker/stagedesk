@@ -6,7 +6,7 @@ const midi = require('midi');
 const dgram = require('dgram');
 const https = require('https');
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const { fromBuffer } = require('pdf2pic');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -507,9 +507,11 @@ app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
   let rawText   = '';
   let pageCount = 0;
   try {
-    const data = await pdfParse(req.file.buffer);
+    const parser = new PDFParse({ data: req.file.buffer });
+    const data   = await parser.getText();
     rawText    = data.text || '';
-    pageCount  = data.numpages || 0;
+    pageCount  = data.total || 0;
+    await parser.destroy();
     log('AI', `PDF text extracted: ${rawText.length} chars, ${pageCount} page(s)`);
   } catch (err) {
     log('AI', `pdf-parse error (will try vision): ${err.message}`);
@@ -564,8 +566,13 @@ app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
       // Determine how many pages to process
       let totalPages = pageCount;
       if (!totalPages) {
-        // Try to get page count via pdf-parse without text (metadata only)
-        try { totalPages = (await pdfParse(req.file.buffer, { max: 1 })).numpages; } catch (_) {}
+        // Try to get page count via pdf-parse info (lighter than full text)
+        try {
+          const infoParser = new PDFParse({ data: req.file.buffer });
+          const info = await infoParser.getInfo();
+          totalPages = info.total || 0;
+          await infoParser.destroy();
+        } catch (_) {}
       }
       const pagesToProcess = Math.min(totalPages || MAX_VISION_PAGES, MAX_VISION_PAGES);
       if (totalPages > MAX_VISION_PAGES) {
