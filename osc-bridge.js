@@ -144,10 +144,26 @@ FLOW:
 
 Be thorough. A real show has 50-150 cues. Generate all of them.`;
 
+// ── In-memory rolling log (last 50 entries) ───────────────────────────────────
+const _logBuffer = [];
+const LOG_MAX = 50;
+
+function _levelFromTag(tag) {
+  const t = tag.toUpperCase();
+  if (t === 'HTTP')  return 'HTTP';
+  if (t === 'OSC')   return 'OSC';
+  if (t === 'AI')    return 'AI';
+  if (t === 'MIDI')  return 'MIDI';
+  if (t === 'ERROR') return 'ERROR';
+  return 'normal';
+}
+
 // ── Logging ───────────────────────────────────────────────────────────────────
 function log(tag, msg) {
   const ts = new Date().toISOString().replace('T', ' ').slice(0, 23);
   console.log(`[${ts}] [${tag}] ${msg}`);
+  _logBuffer.push({ timestamp: ts, level: _levelFromTag(tag), tag, message: msg });
+  if (_logBuffer.length > LOG_MAX) _logBuffer.shift();
 }
 
 // ── Pushover push notifications ───────────────────────────────────────────────
@@ -622,6 +638,22 @@ app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
   res.json({ status: 'ok', showData, mode: useVision ? 'vision' : 'text' });
 });
 
+// GET /logs — return rolling in-memory log (last 50 entries, newest last)
+app.get('/logs', (req, res) => {
+  res.json({ status: 'ok', logs: _logBuffer.slice() });
+});
+
+// GET /restart — gracefully exit so a process manager restarts the bridge
+// Requires running the bridge with: npm run bridge:watch (nodemon)
+app.get('/restart', (req, res) => {
+  log('SERVER', 'Restart requested via /restart — exiting in 1s');
+  res.json({
+    status: 'restarting',
+    message: 'Bridge restarting in 1s. Run bridge with: npm run bridge:watch for auto-restart.',
+  });
+  setTimeout(() => process.exit(0), 1000);
+});
+
 // Shared helper — extract JSON from Claude response text
 function parseClaudeJSON(text) {
   const s = text.trim();
@@ -640,7 +672,7 @@ initMidi();
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
+  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  GET /logs  GET /restart  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
   log('SERVER', `AI script import: ${ANTHROPIC_API_KEY ? 'enabled (vision+text)' : 'disabled (set ANTHROPIC_API_KEY in .env)'}`);
   log('SERVER', `Pushover: ${(PUSHOVER_TOKEN && PUSHOVER_GROUP) ? `enabled (warn≤${BATTERY_WARN_BARS} critical≤${BATTERY_CRITICAL_BARS})` : 'disabled (set PUSHOVER_TOKEN + PUSHOVER_GROUP in .env)'}`);
   if (ULXD_IPS.length > 0) {

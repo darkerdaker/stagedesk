@@ -130,6 +130,17 @@ and talking points for the technical team.
 - **Graceful fallback on errors** — if Claude API fails, raw extracted PDF text is
   returned so TD can use the manual text-paste import as fallback
 
+## Bridge tooling
+
+- **Bridge restart button** — one-tap restart from Settings page; bridge responds then exits,
+  nodemon (`npm run bridge:watch`) handles the restart; frontend pings after 3s and shows
+  "Bridge back online" or an error toast; button disabled for 5s to prevent double-tap
+- **Live bridge log viewer** — bottom of Settings page shows last 20 log entries newest-first,
+  auto-refreshes every 10s while Settings is open; color-coded by level: HTTP=cyan, OSC=green,
+  AI=amber, MIDI=dim, ERROR=red; manual REFRESH and display-only CLEAR buttons
+- **Show-night startup command** — `npm run bridge:watch` (nodemon) is the recommended startup;
+  automatically restarts on crash or manual restart, no terminal babysitting required
+
 ## Planned / upcoming
 - [ ] Real DM7 + ULXD test at the theatre
 - [ ] Channel editor — frequency assignment from ULXD scan
