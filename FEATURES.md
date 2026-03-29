@@ -108,8 +108,12 @@ and talking points for the technical team.
 
 ## AI Features
 
-- **AI script import** — upload a PDF script; Claude analyzes it and builds a complete
+- **AI script import** — upload any PDF script; Claude analyzes it and builds a complete
   show file automatically (channels, scenes, cues, flow, swap windows)
+- **Scanned PDF support via Claude Vision** — pages converted to images (pdf2pic,
+  GraphicsMagick, 150 DPI) and read visually; no OCR required
+- **Hybrid approach** — text extraction for digital PDFs (fast, cheap); automatic
+  fallback to Claude Vision for scanned PDFs (< 500 chars extracted triggers vision)
 - **Mic plot suggestions with reasoning** — every character gets a mic recommendation
   (lead / supporting / ensemble / none) based on line count × scene appearances, with
   a human-readable reason for each decision

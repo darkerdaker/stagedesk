@@ -87,11 +87,13 @@ Edit `.env` with the DM7's actual IP before each show. Default: `192.168.1.100:4
 
 ## AI Script Import
 - `POST /ai/parse-script` — multipart PDF upload, field name `script`
-- Uses `pdf-parse` for text extraction, `multer` for upload handling
-- Calls Claude API (`claude-sonnet-4-6`, max_tokens 4000) via `@anthropic-ai/sdk`
-- Returns `{ status: 'ok', showData }` with full structured show JSON
-- `ANTHROPIC_API_KEY` in `.env` — required; endpoint returns 500 with `rawText` if not set
-- PDF extract fails → 422 with error message (prompt TD to use text-based PDF)
+- Hybrid strategy: `pdf-parse` text extraction for digital PDFs (≥500 chars), `pdf2pic` + Claude Vision for scanned PDFs
+- `fromBuffer` (pdf2pic) converts PDF buffer to PNG images — up to 40 pages, 150 DPI, `/tmp` output
+- Requires GraphicsMagick + Ghostscript: `brew install graphicsmagick ghostscript`
+- Vision: image blocks sent to `claude-sonnet-4-6`, max_tokens 8000, 120s timeout
+- Text path: same model, max_tokens 8000, text content up to 100k chars
+- Returns `{ status: 'ok', showData, mode: 'text'|'vision' }` with full structured show JSON
+- `ANTHROPIC_API_KEY` in `.env` — required; 500 returned if not set
 - Claude API error → 500 with `rawText` snippet so TD can use manual import as fallback
 - Frontend preview panel opens before committing — TD can edit mic recommendations inline
 

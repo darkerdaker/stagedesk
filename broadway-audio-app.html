@@ -1425,8 +1425,9 @@
             <button class="btn sm" id="aiAnalyzeBtn" onclick="analyzeWithAI()" style="color:var(--amber);border-color:var(--amber);opacity:0.4;pointer-events:none;width:100%;font-family:var(--mono);letter-spacing:0.1em;text-transform:uppercase;">Analyze with AI</button>
             <div class="ai-progress" id="aiProgress">
               <div class="ai-progress-step" id="aiStep1">Step 1: Extracting text from PDF...</div>
-              <div class="ai-progress-step" id="aiStep2">Step 2: Analyzing script with Claude AI...</div>
-              <div class="ai-progress-step" id="aiStep3">Step 3: Building show file...</div>
+              <div class="ai-progress-step" id="aiStep2">Step 2: Converting PDF pages to images...</div>
+              <div class="ai-progress-step" id="aiStep3">Step 3: Sending to Claude AI... (may take 30-60s for scanned PDFs)</div>
+              <div class="ai-progress-step" id="aiStep4">Step 4: Building show file...</div>
             </div>
             <div id="aiError" style="display:none;padding:8px;font-family:var(--mono);font-size:11px;background:var(--red-bg);border:1px solid var(--red);color:var(--red);"></div>
           </div>
@@ -2189,17 +2190,22 @@ function setPDFFile(file) {
   hideAIError();
 }
 
-function setAIStep(n) {
+function setAIStep(n, labelOverride) {
   const prog = document.getElementById('aiProgress');
   prog.style.display = 'flex';
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const el = document.getElementById('aiStep' + i);
+    if (!el) continue;
     el.className = 'ai-progress-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  if (labelOverride) {
+    const el = document.getElementById('aiStep' + n);
+    if (el) el.dataset.label = el.textContent;  // save original
+    if (el) el.textContent = labelOverride;
   }
 }
 function hideAIError() {
-  const el = document.getElementById('aiError');
-  el.style.display = 'none';
+  document.getElementById('aiError').style.display = 'none';
 }
 function showAIError(msg) {
   const el = document.getElementById('aiError');
@@ -2215,6 +2221,18 @@ async function analyzeWithAI() {
   const btn = document.getElementById('aiAnalyzeBtn');
   btn.style.opacity = '0.5';
   btn.style.pointerEvents = 'none';
+
+  // Reset step labels to defaults
+  const defaults = [
+    'Step 1: Extracting text from PDF...',
+    'Step 2: Converting PDF pages to images...',
+    'Step 3: Sending to Claude AI... (may take 30-60s for scanned PDFs)',
+    'Step 4: Building show file...',
+  ];
+  defaults.forEach((t, i) => {
+    const el = document.getElementById('aiStep' + (i + 1));
+    if (el) el.textContent = t;
+  });
 
   setAIStep(1);
 
@@ -2244,10 +2262,22 @@ async function analyzeWithAI() {
     return;
   }
 
-  setAIStep(3);
+  // Update step labels to reflect which mode was used
+  if (result.mode === 'text') {
+    const s2 = document.getElementById('aiStep2');
+    if (s2) s2.textContent = 'Step 2: Digital PDF — text extracted directly';
+    const s3 = document.getElementById('aiStep3');
+    if (s3) s3.textContent = 'Step 3: Analyzed with Claude AI (text mode)';
+  } else if (result.mode === 'vision') {
+    const s2 = document.getElementById('aiStep2');
+    if (s2) s2.textContent = 'Step 2: Scanned PDF — pages converted to images';
+    const s3 = document.getElementById('aiStep3');
+    if (s3) s3.textContent = 'Step 3: Analyzed with Claude Vision AI';
+  }
+
+  setAIStep(4);
   _aiShowData = result.showData;
 
-  // Small delay so TD sees step 3 flash before preview opens
   setTimeout(() => {
     document.getElementById('aiProgress').style.display = 'none';
     btn.style.opacity = '1';

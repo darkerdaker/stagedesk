@@ -7,6 +7,7 @@ const dgram = require('dgram');
 const https = require('https');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
+const { fromBuffer } = require('pdf2pic');
 const Anthropic = require('@anthropic-ai/sdk');
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -486,7 +487,8 @@ app.post('/panic', (req, res) => {
 });
 
 // POST /ai/parse-script — upload a PDF script, get back a structured show JSON
-// Accepts multipart/form-data with field name "script" containing a PDF file.
+// Hybrid approach: text extraction for digital PDFs (fast/cheap),
+// Claude Vision for scanned PDFs (up to 40 pages at 150 DPI).
 app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
   log('HTTP', 'POST /ai/parse-script');
 
@@ -494,71 +496,136 @@ app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
     return res.status(400).json({ error: 'No file uploaded. Send a PDF as multipart field "script".' });
   }
 
-  // Step 1 — extract text from PDF
-  let rawText;
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set in .env — add your key to enable AI import.' });
+  }
+
+  const MAX_VISION_PAGES = 40;
+  const TEXT_MIN_CHARS   = 500;
+
+  // ── Step 1: attempt text extraction ──────────────────────────────────────
+  let rawText   = '';
+  let pageCount = 0;
   try {
     const data = await pdfParse(req.file.buffer);
-    rawText = data.text;
-    log('AI', `PDF extracted: ${rawText.length} chars, ${data.numpages} page(s)`);
+    rawText    = data.text || '';
+    pageCount  = data.numpages || 0;
+    log('AI', `PDF text extracted: ${rawText.length} chars, ${pageCount} page(s)`);
   } catch (err) {
-    log('AI', `PDF parse error: ${err.message}`);
-    return res.status(422).json({
-      error: 'Could not extract text from PDF. Is it a scanned image? Try a text-based PDF.',
-      rawText: null,
-    });
+    log('AI', `pdf-parse error (will try vision): ${err.message}`);
   }
 
-  if (!rawText || rawText.trim().length < 50) {
-    return res.status(422).json({
-      error: 'Could not extract text from PDF. Is it a scanned image? Try a text-based PDF.',
-      rawText: rawText || '',
-    });
-  }
+  const useVision = rawText.trim().length < TEXT_MIN_CHARS;
+  log('AI', `Strategy: ${useVision ? 'vision (scanned PDF)' : 'text (digital PDF)'}`);
 
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({
-      error: 'ANTHROPIC_API_KEY not set in .env — add your key to enable AI import.',
-      rawText: rawText.slice(0, 2000),
-    });
-  }
-
-  // Step 2 — send to Claude for analysis
+  const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
   let showData;
-  try {
-    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
-    log('AI', 'Sending to Claude API...');
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4000,
-      system: SCRIPT_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: rawText.slice(0, 100000) }],
+
+  if (!useVision) {
+    // ── Text path — fast, digital PDF ──────────────────────────────────────
+    try {
+      log('AI', 'Sending text to Claude...');
+      const message = await client.messages.create({
+        model:      'claude-sonnet-4-6',
+        max_tokens: 8000,
+        system:     SCRIPT_SYSTEM_PROMPT,
+        messages:   [{ role: 'user', content: rawText.slice(0, 100000) }],
+      });
+      showData = parseClaudeJSON(message.content[0].text);
+    } catch (err) {
+      log('AI', `Claude text API error: ${err.message}`);
+      return res.status(500).json({ error: `Claude API error: ${err.message}`, rawText: rawText.slice(0, 2000) });
+    }
+  } else {
+    // ── Vision path — scanned PDF ───────────────────────────────────────────
+    // Verify GraphicsMagick is available before attempting conversion
+    const { execSync } = require('child_process');
+    try {
+      execSync('which gm', { stdio: 'ignore' });
+    } catch (_) {
+      return res.status(500).json({
+        error: 'GraphicsMagick not found. Install it to support scanned PDFs:\n  brew install graphicsmagick ghostscript',
+      });
+    }
+
+    // Convert PDF pages to PNG images
+    let pageImages;
+    try {
+      const convert = fromBuffer(req.file.buffer, {
+        density:     150,
+        format:      'png',
+        width:       1275,  // ~8.5in at 150 DPI
+        height:      1650,  // ~11in at 150 DPI
+        preserveAspectRatio: true,
+        saveFilename: 'page',
+        savePath:    '/tmp',
+      });
+
+      // Determine how many pages to process
+      let totalPages = pageCount;
+      if (!totalPages) {
+        // Try to get page count via pdf-parse without text (metadata only)
+        try { totalPages = (await pdfParse(req.file.buffer, { max: 1 })).numpages; } catch (_) {}
+      }
+      const pagesToProcess = Math.min(totalPages || MAX_VISION_PAGES, MAX_VISION_PAGES);
+      if (totalPages > MAX_VISION_PAGES) {
+        log('AI', `Script is ${totalPages} pages — processing first ${MAX_VISION_PAGES}`);
+      }
+
+      log('AI', `Converting ${pagesToProcess} page(s) to images at 150 DPI...`);
+      const pageNums = Array.from({ length: pagesToProcess }, (_, i) => i + 1);
+      pageImages = await Promise.all(pageNums.map(n => convert(n, { responseType: 'base64' })));
+      log('AI', `Conversion complete — ${pageImages.length} image(s)`);
+    } catch (err) {
+      log('AI', `PDF→image conversion error: ${err.message}`);
+      return res.status(500).json({
+        error: `PDF conversion error: ${err.message}\n\nMake sure GraphicsMagick and Ghostscript are installed:\n  brew install graphicsmagick ghostscript`,
+      });
+    }
+
+    // Build Claude vision message content
+    const imageBlocks = pageImages.map(img => ({
+      type:   'image',
+      source: { type: 'base64', media_type: 'image/png', data: img.base64 },
+    }));
+    imageBlocks.push({
+      type: 'text',
+      text: 'Analyze all pages of this theatrical script and return the complete show file JSON.',
     });
 
-    const content = message.content[0].text.trim();
-    log('AI', `Claude response: ${content.length} chars`);
-
-    // Step 3 — parse the JSON response
     try {
-      showData = JSON.parse(content);
-    } catch (_) {
-      const m = content.match(/\{[\s\S]+\}/);
-      if (m) {
-        showData = JSON.parse(m[0]);
-      } else {
-        throw new Error('Claude response did not contain valid JSON');
-      }
+      log('AI', `Sending ${pageImages.length} page image(s) to Claude Vision... (30-60s)`);
+      const message = await client.messages.create({
+        model:      'claude-sonnet-4-6',
+        max_tokens: 8000,
+        system:     SCRIPT_SYSTEM_PROMPT,
+        messages:   [{ role: 'user', content: imageBlocks }],
+      }, { timeout: 120_000 });
+      showData = parseClaudeJSON(message.content[0].text);
+    } catch (err) {
+      log('AI', `Claude vision API error: ${err.message}`);
+      return res.status(500).json({ error: `Claude Vision API error: ${err.message}` });
     }
-  } catch (err) {
-    log('AI', `Claude API error: ${err.message}`);
-    return res.status(500).json({ error: `Claude API error: ${err.message}`, rawText: rawText.slice(0, 2000) });
   }
 
-  const chars  = (showData.characters  || []).length;
-  const scenes = (showData.scenes      || []).length;
-  const cues   = (showData.cues        || []).length;
-  log('AI', `Parse complete — ${chars} characters, ${scenes} scenes, ${cues} cues`);
-  res.json({ status: 'ok', showData });
+  const chars  = (showData.characters || []).length;
+  const scenes = (showData.scenes     || []).length;
+  const cues   = (showData.cues       || []).length;
+  log('AI', `Parse complete (${useVision ? 'vision' : 'text'}) — ${chars} characters, ${scenes} scenes, ${cues} cues`);
+  res.json({ status: 'ok', showData, mode: useVision ? 'vision' : 'text' });
 });
+
+// Shared helper — extract JSON from Claude response text
+function parseClaudeJSON(text) {
+  const s = text.trim();
+  try {
+    return JSON.parse(s);
+  } catch (_) {
+    const m = s.match(/\{[\s\S]+\}/);
+    if (m) return JSON.parse(m[0]);
+    throw new Error('Claude response did not contain valid JSON');
+  }
+}
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 initMidi();
@@ -567,7 +634,7 @@ app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
   log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
-  log('SERVER', `AI script import: ${ANTHROPIC_API_KEY ? 'enabled' : 'disabled (set ANTHROPIC_API_KEY in .env)'}`);
+  log('SERVER', `AI script import: ${ANTHROPIC_API_KEY ? 'enabled (vision+text)' : 'disabled (set ANTHROPIC_API_KEY in .env)'}`);
   log('SERVER', `Pushover: ${(PUSHOVER_TOKEN && PUSHOVER_GROUP) ? `enabled (warn≤${BATTERY_WARN_BARS} critical≤${BATTERY_CRITICAL_BARS})` : 'disabled (set PUSHOVER_TOKEN + PUSHOVER_GROUP in .env)'}`);
   if (ULXD_IPS.length > 0) {
     log('SERVER', `ULXD receivers (port ${ULXD_PORT}): ${ULXD_IPS.join(', ')}`);
