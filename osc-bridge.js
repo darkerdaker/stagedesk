@@ -651,7 +651,7 @@ app.get('/restart', (req, res) => {
     status: 'restarting',
     message: 'Bridge restarting in 1s. Run bridge with: npm run bridge:watch for auto-restart.',
   });
-  setTimeout(() => process.kill(process.pid, 'SIGTERM'), 1000);
+  setTimeout(() => process.kill(process.pid, 'SIGUSR2'), 1000);
 });
 
 // Shared helper — extract JSON from Claude response text

@@ -7,7 +7,7 @@
     "start": "node osc-bridge.js",
     "dev": "node --watch osc-bridge.js",
     "bridge": "node osc-bridge.js",
-    "bridge:watch": "npx nodemon osc-bridge.js"
+    "bridge:watch": "nodemon --signal SIGUSR2 osc-bridge.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
