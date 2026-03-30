@@ -258,7 +258,7 @@ function sendOSC(path, args) {
   udpClient.send(buf, 0, buf.length, DM7_OSC_PORT, DM7_IP, (err) => {
     if (err) log('OSC', `Send error: ${err.message}`);
   });
-  const argsStr = args.map(a => `${a.type}:${a.value}`).join(', ');
+  const argsStr = args.map(a => (typeof a === 'object' && a !== null) ? a.value : a).join(', ');
   log('OSC', `→ ${DM7_IP}:${DM7_OSC_PORT}  ${path}  [${argsStr}]`);
 }
 
