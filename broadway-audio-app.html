@@ -1171,6 +1171,296 @@
     50% { border-left-color: #006d88; }
   }
   .cue-row.active-cue { animation: pulse-cyan 2s ease-in-out infinite; }
+
+  /* ── MODE BADGE ── */
+  .mode-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    cursor: pointer;
+    border: 1px solid;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: all 0.1s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .mode-badge.edit { background: var(--cyan-bg); color: var(--cyan); border-color: var(--cyan); }
+  .mode-badge.show { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+
+  /* ── REDESIGNED BILLBOARD (two-panel) ── */
+  .active-billboard {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    padding: 0;
+    min-height: 82px;
+  }
+  .bill-panel {
+    flex: 1;
+    padding: 8px 14px 8px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .bill-panel.bill-next { border-left: 1px solid var(--border); opacity: 0.72; }
+  .bill-cue-num {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+  }
+  .bill-panel-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 1px;
+    padding-left: 32px;
+  }
+  .bill-panel.bill-active .bill-panel-label { color: var(--cyan); }
+  .bill-char {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--cyan);
+    font-family: var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .bill-char.bill-char-next { color: var(--text2); }
+  .bill-line {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bill-line.bill-line-next { font-size: 16px; color: var(--text2); }
+  .go-btn {
+    width: 160px;
+    flex-shrink: 0;
+    background: var(--amber);
+    border: none;
+    color: #000;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: opacity 0.1s;
+    user-select: none;
+  }
+  .go-btn:hover { background: #c4700a; }
+  .go-btn:active { opacity: 0.85; }
+  .go-key { font-size: 9px; opacity: 0.55; font-weight: 400; letter-spacing: 0.08em; }
+
+  /* ── VIEW TOGGLE ── */
+  .view-toggle-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 10px;
+    height: 26px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text3);
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.1s;
+  }
+  .view-toggle-btn.active { background: var(--cyan); border-color: var(--cyan); color: #000; }
+  .view-toggle-btn:not(.active):hover { background: var(--bg3); color: var(--text2); }
+
+  /* ── CONSOLE STRIPS VIEW ── */
+  .strips-container {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: stretch;
+  }
+  .strips-container::-webkit-scrollbar { height: 4px; }
+  .strips-container::-webkit-scrollbar-thumb { background: var(--border2); }
+  .strips-container::-webkit-scrollbar-track { background: transparent; }
+  .console-strip {
+    width: 88px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    overflow: hidden;
+  }
+  .console-strip:hover { background: rgba(255,255,255,0.03); }
+  .strip-nameplate {
+    padding: 4px 4px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    position: relative;
+    min-height: 50px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .strip-nameplate.active  { background: #003318; }
+  .strip-nameplate.swapped { background: #2a1e08; }
+  .strip-nameplate.problem { background: #2a0800; }
+  .strip-nameplate.off     { background: var(--bg3); }
+  .strip-short-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .strip-nameplate.active  .strip-short-name { color: var(--green); }
+  .strip-nameplate.swapped .strip-short-name { color: var(--amber); }
+  .strip-nameplate.problem .strip-short-name { color: #ff4422; }
+  .strip-nameplate.off     .strip-short-name { color: var(--text3); }
+  .strip-status-badge {
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+  }
+  .strip-nameplate.active  .strip-status-badge { color: var(--green); }
+  .strip-nameplate.swapped .strip-status-badge { color: var(--amber); }
+  .strip-nameplate.problem .strip-status-badge { color: #ff4422; }
+  .strip-nameplate.off     .strip-status-badge { color: var(--text3); }
+  .strip-char-name {
+    font-size: 9px;
+    color: var(--text2);
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 0.03em;
+    padding: 3px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 88px;
+    font-family: var(--mono);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .strip-meters {
+    display: flex;
+    gap: 6px;
+    padding: 6px 8px;
+    justify-content: center;
+    flex: 1;
+    align-items: flex-end;
+  }
+  .strip-meter { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .strip-meter-label { font-family: var(--mono); font-size: 8px; color: var(--text3); letter-spacing: 0.05em; margin-bottom: 2px; }
+  .strip-meter-bars { display: flex; flex-direction: column-reverse; gap: 2px; }
+  .strip-meter-seg { width: 14px; height: 8px; background: var(--bg3); flex-shrink: 0; }
+  .strip-rf-seg   { width: 10px; height: 9px; }
+  .strip-meter-seg.lit-green { background: var(--green); }
+  .strip-meter-seg.lit-amber { background: var(--amber); }
+  .strip-meter-seg.lit-red   { background: var(--red); }
+  .strip-groups { padding: 2px 4px; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; min-height: 0; }
+  .strip-group-row { display: flex; gap: 2px; flex-wrap: wrap; align-items: center; }
+  .strip-group-label { font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: 0.05em; margin-right: 1px; }
+  .strip-group-badge { font-family: var(--mono); font-size: 8px; font-weight: 700; padding: 0px 3px; border: 1px solid; }
+  .strip-dca-label  { color: var(--amber); }
+  .strip-dca-badge  { color: var(--amber); border-color: var(--amber); }
+  .strip-mut-label  { color: var(--red); }
+  .strip-mut-badge  { color: var(--red); border-color: var(--red); }
+  .strip-freq {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    text-align: center;
+    padding: 2px 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .strip-ch-num {
+    background: var(--bg1);
+    border-top: 1px solid var(--border);
+    padding: 4px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .strip-fader {
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 4px;
+    position: relative;
+    border-top: 1px solid var(--border);
+  }
+  .strip-fader-track { width: 1px; height: 100%; background: var(--border2); position: absolute; top: 0; left: 50%; }
+  .strip-fader-cap   { width: 22px; height: 7px; background: var(--border2); position: relative; z-index: 1; }
+
+  /* ── DCA/MUTE BADGES (grid cards) ── */
+  .ch-groups { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+  .ch-group-badge { font-family: var(--mono); font-size: 8px; font-weight: 700; padding: 1px 4px; border: 1px solid; }
+  .ch-dca-badge { color: var(--amber); border-color: var(--amber); background: var(--amber-bg); }
+  .ch-mut-badge { color: var(--red);   border-color: var(--red);   background: var(--red-bg); }
+
+  /* ── EXPANDED CHANNEL MODAL ── */
+  .ch-edit-note {
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    letter-spacing: 0.04em; padding: 0 0 2px; line-height: 1.5;
+  }
+  .modal-btn-block { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .btn-full {
+    width: 100%; height: 36px; border: none;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: opacity 0.1s;
+  }
+  .btn-full:active { opacity: 0.85; }
+  .btn-full.save   { background: var(--amber); color: #000; }
+  .btn-full.save:hover { background: #c4700a; }
+  .btn-full.delete { background: var(--red-bg); border: 1px solid var(--red); color: var(--red); }
+  .btn-full.delete:hover { background: var(--red); color: #fff; }
+  .btn-full.cancel { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+  .btn-full.cancel:hover { background: var(--bg3); }
+
+  /* ── SHOW MODE LOCK ── */
+  .mode-locked { pointer-events: none; opacity: 0.4; }
 </style>
 </head>
 <body>
@@ -1179,6 +1469,7 @@
 <div class="topbar">
   <div class="logo"><span>DM7 ·</span> STAGEDESK</div>
   <div class="show-name" id="showNameDisplay">No show loaded</div>
+  <div class="mode-badge edit" id="modeBadge" onclick="toggleMode()">&#9998; EDIT</div>
   <div class="topbar-right">
     <div class="ulxd-indicator" id="ulxdIndicator">
       <div class="osc-dot" id="ulxdDot"></div>
@@ -1235,31 +1526,37 @@
           <button class="btn sm" onclick="prevCue()">◀ Prev</button>
           <button class="btn sm primary" onclick="nextCue()">Next ▶</button>
           <button class="btn sm icon-only" onclick="scrollToActive()" title="Jump to active">⊙</button>
-          <button class="btn sm" onclick="resetCues()">↺ Reset</button>
+          <button class="btn sm" id="resetCuesBtn" onclick="resetCues()">&#8634; Reset</button>
         </div>
       </div>
 
       <div class="cue-body" id="cueList"></div>
 
-      <!-- ACTIVE CUE BILLBOARD -->
+      <!-- ACTIVE CUE BILLBOARD (two-panel) -->
       <div class="active-billboard">
-        <div class="billboard-label">▶ ACTIVE CUE</div>
-        <div class="billboard-content">
-          <div class="billboard-text">
-            <div class="billboard-char" id="billChar">—</div>
-            <div class="billboard-line" id="billLine">No cue selected. Add cues below or import a script.</div>
-          </div>
-          <div class="billboard-actions">
-            <button class="next-btn" onclick="nextCue()">
-              GO <span class="arrow">▶</span>
-            </button>
-            <div class="next-label" id="nextLabel">SPACEBAR or tap GO</div>
-          </div>
+        <div class="bill-panel bill-active">
+          <div class="bill-cue-num" id="billActiveCueNum"></div>
+          <div class="bill-panel-label">&#9654; ACTIVE CUE</div>
+          <div class="bill-char" id="billChar">—</div>
+          <div class="bill-line" id="billLine">No cue selected. Add cues below or import a script.</div>
+          <div id="billAction"></div>
         </div>
+        <div class="bill-panel bill-next">
+          <div class="bill-cue-num" id="billNextCueNum"></div>
+          <div class="bill-panel-label">NEXT</div>
+          <div class="bill-char bill-char-next" id="billNextChar">—</div>
+          <div class="bill-line bill-line-next" id="billNextLine">—</div>
+          <div id="billNextAction"></div>
+        </div>
+        <button class="go-btn" onclick="nextCue()">
+          <span>GO &#9654;</span>
+          <span class="go-key">SPACE</span>
+        </button>
       </div>
 
       <!-- ADD CUE BAR -->
       <div class="add-cue-bar">
+        <input class="short-input" id="newCueNum" placeholder="1.00" style="max-width:62px;font-family:var(--mono);" type="text" />
         <input class="short-input" id="newScene" placeholder="Scene" />
         <input class="short-input" id="newChar" placeholder="Character" />
         <input class="line-input" id="newLine" placeholder="Line / note" />
@@ -1293,12 +1590,17 @@
             <span style="padding:1px 4px;border:1px solid var(--border);color:var(--text3);background:var(--bg3);">OFF</span>
           </span>
           <span class="ulxd-badge offline" id="ulxdBadge">ULXD OFFLINE</span>
-          <button class="btn sm" onclick="addChannel()">+ Add channel</button>
+          <div style="display:flex;gap:0;">
+            <button class="view-toggle-btn active" id="viewBtnGrid" onclick="setChannelView('grid')">GRID</button>
+            <button class="view-toggle-btn" id="viewBtnStrips" onclick="setChannelView('strips')">STRIPS</button>
+          </div>
+          <button class="btn sm" id="addChannelBtn" onclick="addChannel()">+ Add channel</button>
         </div>
       </div>
-      <div class="channels-body">
+      <div class="channels-body" id="channelGridBody">
         <div class="channels-grid" id="channelGrid"></div>
       </div>
+      <div class="strips-container" id="channelStrips" style="display:none;"></div>
     </div>
 
     <!-- ── PAGE: SCENE LIST ── -->
@@ -1458,6 +1760,24 @@
           </div>
         </div>
 
+        <div class="settings-section">
+          <div class="settings-label">Auto show mode</div>
+          <div class="settings-card">
+            <div class="field-row">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+                <input type="checkbox" id="autoShowToggle" onchange="saveAutoShowMode()" style="accent-color:var(--amber);" />
+                <span style="font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:0.06em;text-transform:uppercase;">AUTO SHOW MODE</span>
+              </label>
+            </div>
+            <div class="field-row" id="autoShowTimeRow">
+              <div class="field-label">Enter after</div>
+              <input class="field-input" type="number" id="autoShowMins" value="30" min="1" max="999" style="max-width:70px;" onchange="saveAutoShowMode()" />
+              <div class="field-label" style="min-width:auto;">minutes</div>
+            </div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">Auto-switches to Show Mode after the specified idle time, locking console edits.</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1491,34 +1811,78 @@
 
 <!-- CHANNEL EDITOR MODAL -->
 <div class="modal-overlay" id="channelEditModal">
-  <div class="modal editor">
+  <div class="modal editor" style="max-width:440px;">
     <div class="modal-title" id="chEditTitle">Edit channel</div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;gap:10px;">
+        <div class="field-row" style="flex:0 0 auto;">
+          <div class="field-label">CH #</div>
+          <input class="field-input" id="chEditChNum" type="number" min="1" max="32" style="max-width:64px;" placeholder="1" />
+        </div>
+        <div class="field-row" style="flex:1;">
+          <div class="field-label">Status</div>
+          <select class="field-input" id="chEditStatus">
+            <option value="active">Active</option>
+            <option value="swapped">Swapped</option>
+            <option value="problem">RF problem</option>
+            <option value="off">Off</option>
+          </select>
+        </div>
+      </div>
       <div class="field-row">
-        <div class="field-label">Actor</div>
-        <input class="field-input" id="chEditActor" placeholder="Actor name" />
+        <div class="field-label">Actor name</div>
+        <input class="field-input" id="chEditActor" placeholder="Actor name" oninput="autoShortName()" />
       </div>
       <div class="field-row">
         <div class="field-label">Character</div>
-        <input class="field-input" id="chEditChar" placeholder="Character" />
+        <input class="field-input" id="chEditChar" placeholder="Character name" />
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="field-row" style="flex:1;">
+          <div class="field-label">Pack type</div>
+          <select class="field-input" id="chEditPackType">
+            <option value="Handheld">Handheld</option>
+            <option value="Lavalier">Lavalier</option>
+            <option value="Headset">Headset</option>
+            <option value="IEM">IEM</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field-row" style="flex:1;">
+          <div class="field-label">Short name</div>
+          <input class="field-input" id="chEditShortName" maxlength="8" placeholder="8 chars max" style="font-family:var(--mono);text-transform:uppercase;" />
+        </div>
       </div>
       <div class="field-row">
         <div class="field-label">Frequency</div>
         <input class="field-input" id="chEditFreq" placeholder="e.g. 518.100 MHz" />
       </div>
       <div class="field-row">
-        <div class="field-label">Status</div>
-        <select class="field-input" id="chEditStatus">
-          <option value="active">Active</option>
-          <option value="swapped">Swapped</option>
-          <option value="problem">RF problem</option>
-          <option value="off">Off</option>
-        </select>
+        <div class="field-label">DCA groups</div>
+        <input class="field-input" id="chEditDcaGroups" placeholder="e.g. 2, 4" />
       </div>
+      <div class="field-row">
+        <div class="field-label">Mute groups</div>
+        <input class="field-input" id="chEditMuteGroups" placeholder="e.g. 1, 3" />
+      </div>
+      <div class="ch-edit-note">DCA and mute groups will be read from console automatically in show mode.</div>
     </div>
+    <div class="modal-btn-block">
+      <button class="btn-full save" onclick="saveChannelEdit()">SAVE</button>
+      <button class="btn-full delete" id="chDeleteBtn" onclick="deleteChannel()">DELETE CHANNEL</button>
+      <button class="btn-full cancel" onclick="closeChannelEdit()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODE CONFIRMATION MODAL -->
+<div class="modal-overlay" id="editModeModal">
+  <div class="modal" style="border-color:var(--cyan);max-width:360px;">
+    <div class="modal-title" style="color:var(--cyan);">ENTER EDIT MODE?</div>
+    <div class="modal-body">Console-critical changes will sync live to DM7. Use during rehearsal and load-in only.</div>
     <div class="modal-actions">
-      <button class="modal-confirm editor" onclick="saveChannelEdit()">Save</button>
-      <button class="modal-cancel" onclick="closeChannelEdit()">Cancel</button>
+      <button class="modal-confirm" style="background:var(--cyan);color:#000;" onclick="confirmEnterEdit()">ENTER EDIT MODE</button>
+      <button class="modal-cancel" onclick="closeEditModeModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1588,6 +1952,10 @@ let state = {
   show: { name: '', venue: '' },
   console: { ip: '', port: '49280', proto: 'osc' },
   role: 'A1',
+  mode: 'edit',
+  channelView: 'grid',
+  autoShowMode: false,
+  autoShowMins: 30,
   cues: [],
   activeCue: -1,
   channels: [],
@@ -1666,9 +2034,9 @@ function renderCues() {
     if (c.action && c.action !== 'note') {
       actionHtml = `<div class="cue-action ${c.action}">${actionIcon(c.action)} ${actionLabel(c.action, c.actionVal)}</div>`;
     }
-    return `<div class="cue-row ${isActive ? 'active-cue' : ''} ${isPast ? 'past' : ''} ${urgClass}" 
+    return `<div class="cue-row ${isActive ? 'active-cue' : ''} ${isPast ? 'past' : ''} ${urgClass}"
       onclick="setCue(${i})" data-idx="${i}">
-      <div class="cue-num">${i + 1}</div>
+      <div class="cue-num" style="font-family:var(--mono);font-size:10px;">${formatCueNum(c.cueNumber || (i + 1))}</div>
       <div class="cue-scene-col">
         <div class="cue-scene-name">${esc(c.scene || '—')}</div>
         <div class="cue-char">${esc(c.character || '—')}</div>
@@ -1719,8 +2087,27 @@ function nextCue() {
 function prevCue() {
   if (state.activeCue > 0) { state.activeCue--; renderCues(); scrollToActive(); save(); }
 }
+let _resetConfirming = false;
+let _resetConfirmTimer = null;
+
 function resetCues() {
-  state.activeCue = -1; renderCues(); save();
+  const btn = document.getElementById('resetCuesBtn');
+  if (_resetConfirming) {
+    clearTimeout(_resetConfirmTimer);
+    _resetConfirming = false;
+    if (btn) { btn.textContent = '\u21BA Reset'; btn.style.color = ''; btn.style.borderColor = ''; }
+    state.activeCue = -1;
+    renderCues();
+    save();
+    showToast('Cues reset', 'success');
+  } else {
+    _resetConfirming = true;
+    if (btn) { btn.textContent = 'CONFIRM?'; btn.style.color = 'var(--amber)'; btn.style.borderColor = 'var(--amber)'; }
+    _resetConfirmTimer = setTimeout(() => {
+      _resetConfirming = false;
+      if (btn) { btn.textContent = '\u21BA Reset'; btn.style.color = ''; btn.style.borderColor = ''; }
+    }, 3000);
+  }
 }
 function scrollToActive() {
   const el = document.querySelector('.cue-row.active-cue');
@@ -1729,31 +2116,56 @@ function scrollToActive() {
 
 function updateBillboard() {
   const cues = filteredCues();
-  const c = cues[state.activeCue];
-  document.getElementById('billChar').textContent = c ? (c.character || '—') : '—';
-  document.getElementById('billLine').textContent = c ? (c.line || '—') : 'No cue selected.';
+  const c    = cues[state.activeCue];
   const next = cues[state.activeCue + 1];
-  document.getElementById('nextLabel').textContent = next ? `Next: ${next.character || ''} — ${(next.line || '').slice(0, 40)}${next.line && next.line.length > 40 ? '…' : ''}` : 'Last cue';
-  const sb = document.getElementById('currentSceneBadge');
-  sb.textContent = c ? (c.scene || 'NO SCENE') : 'NO SCENE';
+
+  // Active panel
+  document.getElementById('billChar').textContent = c ? (c.character || '—').toUpperCase() : '—';
+  document.getElementById('billLine').textContent = c ? (c.line || '—') : 'No cue selected.';
+  document.getElementById('billActiveCueNum').textContent = c ? 'CUE ' + formatCueNum(c.cueNumber) : '';
+  const billAct = document.getElementById('billAction');
+  if (c && c.action && c.action !== 'note') {
+    billAct.innerHTML = `<div class="cue-action ${c.action}" style="margin-top:3px;">${actionIcon(c.action)} ${actionLabel(c.action, c.actionVal)}</div>`;
+  } else { billAct.innerHTML = ''; }
+
+  // Next panel
+  document.getElementById('billNextChar').textContent = next ? (next.character || '—').toUpperCase() : '—';
+  document.getElementById('billNextLine').textContent = next ? (next.line || '—') : '— end of cues —';
+  document.getElementById('billNextCueNum').textContent = next ? 'CUE ' + formatCueNum(next.cueNumber) : '';
+  const billNextAct = document.getElementById('billNextAction');
+  if (next && next.action && next.action !== 'note') {
+    billNextAct.innerHTML = `<div class="cue-action ${next.action}" style="margin-top:3px;opacity:0.7;">${actionIcon(next.action)} ${actionLabel(next.action, next.actionVal)}</div>`;
+  } else { billNextAct.innerHTML = ''; }
+
+  document.getElementById('currentSceneBadge').textContent = c ? (c.scene || 'NO SCENE') : 'NO SCENE';
 }
 
 function updateCuePos() {
   const cues = filteredCues();
-  document.getElementById('cuePosLabel').textContent = `CUE ${state.activeCue >= 0 ? state.activeCue + 1 : 0} / ${cues.length}`;
+  const cur = state.activeCue >= 0 ? formatCueNum(cues[state.activeCue]?.cueNumber) : '—';
+  document.getElementById('cuePosLabel').textContent = `CUE ${cur} / ${cues.length}`;
 }
 
 function addCue() {
-  const scene = document.getElementById('newScene').value.trim();
-  const char  = document.getElementById('newChar').value.trim();
-  const line  = document.getElementById('newLine').value.trim();
-  const action = document.getElementById('newAction').value;
+  const scene     = document.getElementById('newScene').value.trim();
+  const char      = document.getElementById('newChar').value.trim();
+  const line      = document.getElementById('newLine').value.trim();
+  const action    = document.getElementById('newAction').value;
   const actionVal = document.getElementById('newActionVal').value.trim();
-  const urgency = document.getElementById('newUrgency').value;
+  const urgency   = document.getElementById('newUrgency').value;
   if (!line && !char) { showToast('Enter at least a character or line', 'error'); return; }
-  state.cues.push({ scene, character: char, line, action, actionVal, urgency });
+
+  const numInput = document.getElementById('newCueNum');
+  let cueNumber = parseFloat(numInput.value);
+  if (isNaN(cueNumber) || cueNumber <= 0) cueNumber = nextCueNumber();
+
+  state.cues.push({ cueNumber, scene, character: char, line, action, actionVal, urgency });
+  state.cues.sort((a, b) => (parseFloat(a.cueNumber) || 0) - (parseFloat(b.cueNumber) || 0));
+
   document.getElementById('newLine').value = '';
   document.getElementById('newActionVal').value = '';
+  numInput.value = formatCueNum(nextCueNumberFrom(cueNumber));
+
   renderCues();
   save();
   showToast('Cue added', 'success');
@@ -1784,6 +2196,14 @@ function renderStrip() {
 // ── CHANNEL LAYOUT ──
 function renderChannels() {
   renderStrip();
+  const view = state.channelView || 'grid';
+  document.getElementById('channelGridBody').style.display  = view === 'grid'   ? '' : 'none';
+  document.getElementById('channelStrips').style.display    = view === 'strips' ? 'flex' : 'none';
+  document.getElementById('viewBtnGrid').classList.toggle('active', view === 'grid');
+  document.getElementById('viewBtnStrips').classList.toggle('active', view === 'strips');
+
+  if (view === 'strips') { renderChannelStrips(); return; }
+
   const grid = document.getElementById('channelGrid');
   if (state.channels.length === 0) {
     grid.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px;grid-column:1/-1;">No channels. Add channels or load demo show from Settings.</div>';
@@ -1791,6 +2211,15 @@ function renderChannels() {
   }
   grid.innerHTML = state.channels.map((ch, i) => {
     const statusClass = ch.status || 'active';
+    const dca  = ch.dcaGroups  || [];
+    const mute = ch.muteGroups || [];
+    let groupsHtml = '';
+    if (dca.length > 0 || mute.length > 0) {
+      groupsHtml = '<div class="ch-groups">';
+      dca.forEach(g  => { groupsHtml += `<span class="ch-group-badge ch-dca-badge">DCA ${esc(g)}</span>`; });
+      mute.forEach(g => { groupsHtml += `<span class="ch-group-badge ch-mut-badge">MUT ${esc(g)}</span>`; });
+      groupsHtml += '</div>';
+    }
     return `<div class="channel-card ${statusClass}" onclick="editChannel(${i})">
       <div class="ch-row">
         <div class="ch-num">CH${ch.num || (i+1)}</div>
@@ -1799,33 +2228,113 @@ function renderChannels() {
       <div class="ch-actor">${esc(ch.actor || 'Unassigned')}</div>
       <div class="ch-char">${esc(ch.character || '—')}</div>
       <div class="ch-freq">${esc(ch.freq || '')}</div>
+      ${groupsHtml}
       ${cardTelemetry(ch.num || (i+1), ch.freq)}
     </div>`;
   }).join('');
 }
 
-function addChannel() {
-  const num = prompt('Channel number (1-32):');
-  if (!num) return;
-  const actor = prompt('Actor name:') || '';
-  const character = prompt('Character:') || '';
-  const freq = prompt('Frequency (optional):') || '';
-  state.channels.push({ num: parseInt(num), actor, character, freq, status: 'active' });
-  state.channels.sort((a, b) => a.num - b.num);
+function renderChannelStrips() {
+  const container = document.getElementById('channelStrips');
+  if (!container) return;
+  if (state.channels.length === 0) {
+    container.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px;">No channels configured.</div>';
+    return;
+  }
+  container.innerHTML = state.channels.map((ch, i) => {
+    const status = ch.status || 'active';
+    const statusLabel = { active:'LIVE', swapped:'SWAP', problem:'RF!', off:'OFF' }[status] || '';
+    const shortName = (ch.shortName || (ch.actor || '').slice(0, 8) || ('CH' + (ch.num || i+1))).toUpperCase();
+    const t = ulxdData[ch.num || (i+1)];
+    const batt = t ? t.batt_bars : null;
+    const rf   = t ? t.rf_level  : null;
+
+    // RF meter (3 segs)
+    const rfLevel = rf !== null ? (rf > 60 ? 3 : rf > 30 ? 2 : 1) : 0;
+    const rfCls   = rfLevel === 3 ? 'lit-green' : rfLevel === 2 ? 'lit-amber' : 'lit-red';
+    let rfMeter   = `<div class="strip-meter"><div class="strip-meter-label">RF</div><div class="strip-meter-bars">`;
+    for (let s = 1; s <= 3; s++) rfMeter += `<div class="strip-meter-seg strip-rf-seg${s <= rfLevel && rfLevel > 0 ? ' '+rfCls : ''}"></div>`;
+    rfMeter += `</div></div>`;
+
+    // Battery meter (5 segs)
+    const battCls = batt !== null ? (batt >= 3 ? 'lit-green' : batt === 2 ? 'lit-amber' : 'lit-red') : '';
+    let battMeter = `<div class="strip-meter"><div class="strip-meter-label">BAT</div><div class="strip-meter-bars">`;
+    for (let s = 1; s <= 5; s++) battMeter += `<div class="strip-meter-seg${s <= (batt||0) && batt !== null ? ' '+battCls : ''}"></div>`;
+    battMeter += `</div></div>`;
+
+    // Group badges
+    const dca  = ch.dcaGroups  || [];
+    const mute = ch.muteGroups || [];
+    let groupsHtml = '<div class="strip-groups">';
+    if (dca.length > 0)  { groupsHtml += `<div class="strip-group-row"><span class="strip-group-label strip-dca-label">DCA</span>${dca.map(g=>`<span class="strip-group-badge strip-dca-badge">${esc(g)}</span>`).join('')}</div>`; }
+    if (mute.length > 0) { groupsHtml += `<div class="strip-group-row"><span class="strip-group-label strip-mut-label">MUT</span>${mute.map(g=>`<span class="strip-group-badge strip-mut-badge">${esc(g)}</span>`).join('')}</div>`; }
+    groupsHtml += '</div>';
+
+    const freqShort = (ch.freq || '').replace(' MHz','').replace('MHz','');
+    return `<div class="console-strip" onclick="editChannel(${i})">
+      <div class="strip-nameplate ${status}">
+        <div class="strip-status-badge">${statusLabel}</div>
+        <div class="strip-short-name">${esc(shortName)}</div>
+      </div>
+      <div class="strip-char-name">${esc((ch.character || '').slice(0, 11))}</div>
+      <div class="strip-meters">${rfMeter}${battMeter}</div>
+      ${groupsHtml}
+      <div class="strip-freq">${esc(freqShort)}</div>
+      <div class="strip-ch-num">CH ${ch.num || (i+1)}</div>
+      <div class="strip-fader"><div class="strip-fader-track"></div><div class="strip-fader-cap"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function setChannelView(view) {
+  state.channelView = view;
   renderChannels();
   save();
+}
+
+function addChannel() {
+  if (!requireEditMode()) return;
+  _editingChannelIdx = -1;
+  document.getElementById('chEditTitle').textContent = 'Add channel';
+  document.getElementById('chEditChNum').value = nextChannelNum();
+  document.getElementById('chEditActor').value = '';
+  document.getElementById('chEditChar').value = '';
+  document.getElementById('chEditFreq').value = '';
+  document.getElementById('chEditPackType').value = 'Lavalier';
+  document.getElementById('chEditShortName').value = '';
+  document.getElementById('chEditStatus').value = 'active';
+  document.getElementById('chEditMuteGroups').value = '';
+  document.getElementById('chEditDcaGroups').value = '';
+  const delBtn = document.getElementById('chDeleteBtn');
+  delBtn.textContent = 'DELETE CHANNEL';
+  delBtn.dataset.confirming = '';
+  document.getElementById('channelEditModal').classList.add('open');
+}
+
+function nextChannelNum() {
+  if (state.channels.length === 0) return 1;
+  return Math.max(...state.channels.map(c => c.num || 0)) + 1;
 }
 
 let _editingChannelIdx = -1;
 
 function editChannel(i) {
+  if (!requireEditMode()) return;
   const ch = state.channels[i];
   _editingChannelIdx = i;
   document.getElementById('chEditTitle').textContent = `Edit CH${ch.num || (i+1)}`;
-  document.getElementById('chEditActor').value  = ch.actor     || '';
-  document.getElementById('chEditChar').value   = ch.character || '';
-  document.getElementById('chEditFreq').value   = ch.freq      || '';
-  document.getElementById('chEditStatus').value = ch.status    || 'active';
+  document.getElementById('chEditChNum').value       = ch.num       || (i+1);
+  document.getElementById('chEditActor').value       = ch.actor     || '';
+  document.getElementById('chEditChar').value        = ch.character || '';
+  document.getElementById('chEditFreq').value        = ch.freq      || '';
+  document.getElementById('chEditPackType').value    = ch.packType  || 'Lavalier';
+  document.getElementById('chEditShortName').value   = ch.shortName || (ch.actor || '').slice(0, 8);
+  document.getElementById('chEditStatus').value      = ch.status    || 'active';
+  document.getElementById('chEditMuteGroups').value  = (ch.muteGroups || []).join(', ');
+  document.getElementById('chEditDcaGroups').value   = (ch.dcaGroups  || []).join(', ');
+  const delBtn = document.getElementById('chDeleteBtn');
+  delBtn.textContent = 'DELETE CHANNEL';
+  delBtn.dataset.confirming = '';
   document.getElementById('channelEditModal').classList.add('open');
 }
 
@@ -1834,18 +2343,158 @@ function closeChannelEdit() {
   _editingChannelIdx = -1;
 }
 
+function autoShortName() {
+  const actor = document.getElementById('chEditActor').value.trim();
+  const sn = document.getElementById('chEditShortName');
+  if (!sn.dataset.manuallyEdited) sn.value = actor.slice(0, 8);
+}
+
 function saveChannelEdit() {
-  if (_editingChannelIdx < 0) return;
+  const num    = parseInt(document.getElementById('chEditChNum').value) || nextChannelNum();
+  const actor  = document.getElementById('chEditActor').value.trim();
+  const char   = document.getElementById('chEditChar').value.trim();
+  const freq   = document.getElementById('chEditFreq').value.trim();
+  const ptype  = document.getElementById('chEditPackType').value;
+  const sname  = document.getElementById('chEditShortName').value.trim().slice(0, 8).toUpperCase();
+  const status = document.getElementById('chEditStatus').value;
+  const mute   = parseCsv(document.getElementById('chEditMuteGroups').value);
+  const dca    = parseCsv(document.getElementById('chEditDcaGroups').value);
+
+  if (_editingChannelIdx < 0) {
+    // New channel
+    state.channels.push({ num, actor, character: char, freq, packType: ptype, shortName: sname, status, muteGroups: mute, dcaGroups: dca });
+    state.channels.sort((a, b) => (a.num||0) - (b.num||0));
+    closeChannelEdit();
+    renderChannels();
+    save();
+    showToast(`CH${num} added`, 'success');
+    return;
+  }
+
   const ch = state.channels[_editingChannelIdx];
-  ch.actor     = document.getElementById('chEditActor').value.trim();
-  ch.character = document.getElementById('chEditChar').value.trim();
-  ch.freq      = document.getElementById('chEditFreq').value.trim();
-  ch.status    = document.getElementById('chEditStatus').value;
+  ch.num       = num;
+  ch.actor     = actor;
+  ch.character = char;
+  ch.freq      = freq;
+  ch.packType  = ptype;
+  ch.shortName = sname;
+  ch.status    = status;
+  ch.muteGroups = mute;
+  ch.dcaGroups  = dca;
   closeChannelEdit();
   renderChannels();
   renderStrip();
   save();
   showToast(`CH${ch.num} saved`, 'success');
+}
+
+function deleteChannel() {
+  const btn = document.getElementById('chDeleteBtn');
+  if (btn.dataset.confirming === '1') {
+    if (_editingChannelIdx >= 0) {
+      const ch = state.channels[_editingChannelIdx];
+      state.channels.splice(_editingChannelIdx, 1);
+      closeChannelEdit();
+      renderChannels();
+      save();
+      showToast(`CH${ch.num} deleted`);
+    }
+  } else {
+    btn.dataset.confirming = '1';
+    btn.textContent = 'CONFIRM DELETE?';
+    setTimeout(() => {
+      if (btn.dataset.confirming === '1') { btn.dataset.confirming = ''; btn.textContent = 'DELETE CHANNEL'; }
+    }, 3000);
+  }
+}
+
+// ── CUE NUMBER HELPERS ──
+function formatCueNum(n) {
+  if (n === undefined || n === null || isNaN(parseFloat(n))) return '—';
+  return parseFloat(n).toFixed(2);
+}
+function nextCueNumberFrom(n) {
+  const dec = Math.round((n % 1) * 100) / 100;
+  if (dec === 0) return Math.floor(n) + 1;
+  return parseFloat((n + 0.1).toFixed(2));
+}
+function nextCueNumber() {
+  if (state.cues.length === 0) return 1;
+  const last = Math.max(...state.cues.map(c => parseFloat(c.cueNumber) || 0));
+  return nextCueNumberFrom(last);
+}
+
+// ── UTILS ──
+function parseCsv(s) {
+  return String(s || '').split(',').map(x => x.trim()).filter(x => x);
+}
+
+// ── EDIT/SHOW MODE ──
+function toggleMode() {
+  if (state.mode === 'show') {
+    document.getElementById('editModeModal').classList.add('open');
+  } else {
+    state.mode = 'show';
+    updateModeBadge();
+    applyModeLocks();
+    showToast('Show mode active \u2014 console edits locked');
+    save();
+  }
+}
+function confirmEnterEdit() {
+  closeEditModeModal();
+  state.mode = 'edit';
+  updateModeBadge();
+  applyModeLocks();
+  showToast('Edit mode active \u2014 live sync enabled');
+  save();
+}
+function closeEditModeModal() {
+  document.getElementById('editModeModal').classList.remove('open');
+}
+function updateModeBadge() {
+  const badge = document.getElementById('modeBadge');
+  if (!badge) return;
+  if (state.mode === 'show') {
+    badge.textContent = '\u25BA SHOW';
+    badge.className = 'mode-badge show';
+  } else {
+    badge.innerHTML = '&#9998; EDIT';
+    badge.className = 'mode-badge edit';
+  }
+}
+function applyModeLocks() {
+  const locked = state.mode === 'show';
+  const lockIds = ['addChannelBtn'];
+  lockIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('mode-locked', locked);
+  });
+}
+function requireEditMode() {
+  if (state.mode === 'show') {
+    showToast('Switch to Edit Mode to make changes');
+    return false;
+  }
+  return true;
+}
+
+// ── AUTO SHOW MODE ──
+let _autoShowTimer = null;
+function saveAutoShowMode() {
+  state.autoShowMode = document.getElementById('autoShowToggle').checked;
+  state.autoShowMins = parseInt(document.getElementById('autoShowMins').value) || 30;
+  if (_autoShowTimer) { clearTimeout(_autoShowTimer); _autoShowTimer = null; }
+  if (state.autoShowMode && state.mode === 'edit') {
+    _autoShowTimer = setTimeout(() => {
+      state.mode = 'show';
+      updateModeBadge();
+      applyModeLocks();
+      showToast('Auto show mode activated');
+      save();
+    }, state.autoShowMins * 60000);
+  }
+  save();
 }
 
 // ── SCENE LIST ──
@@ -1869,6 +2518,7 @@ function renderScenes() {
 }
 
 function addScene() {
+  if (!requireEditMode()) return;
   const name = prompt('Scene name:');
   if (!name) return;
   const dmScene = prompt('DM7 scene number:') || '';
@@ -2595,6 +3245,17 @@ function handleJSONImport(e) {
 }
 
 function applyLoadedState() {
+  // Ensure new state fields have defaults after loading old saves
+  if (!state.mode) state.mode = 'edit';
+  if (!state.channelView) state.channelView = 'grid';
+  if (state.autoShowMode === undefined) state.autoShowMode = false;
+  if (!state.autoShowMins) state.autoShowMins = 30;
+
+  // Migrate cues without cueNumber
+  state.cues.forEach((c, i) => {
+    if (c.cueNumber === undefined || c.cueNumber === null) c.cueNumber = i + 1;
+  });
+
   document.getElementById('showNameDisplay').textContent = state.show.name || 'No show loaded';
   document.getElementById('showNameInput').value = state.show.name || '';
   document.getElementById('venueInput').value = state.show.venue || '';
@@ -2604,6 +3265,19 @@ function applyLoadedState() {
   const pill = document.getElementById('rolePill');
   pill.textContent = state.role;
   pill.className = 'role-pill ' + (state.role || 'A1').toLowerCase();
+
+  // Settings page fields (only update if element exists & visible)
+  const autoToggle = document.getElementById('autoShowToggle');
+  if (autoToggle) autoToggle.checked = !!state.autoShowMode;
+  const autoMins = document.getElementById('autoShowMins');
+  if (autoMins) autoMins.value = state.autoShowMins || 30;
+
+  // Update cue-number suggestion
+  const numInput = document.getElementById('newCueNum');
+  if (numInput) numInput.value = formatCueNum(nextCueNumber());
+
+  updateModeBadge();
+  applyModeLocks();
   renderCues();
   renderStrip();
   if (currentPage === 'channels') renderChannels();
@@ -2625,22 +3299,22 @@ function loadDemo() {
   state.show = { name: 'Into the Woods', venue: 'Main Stage' };
   state.activeCue = -1;
   state.channels = [
-    { num:1, actor:'Jake M.', character:'Baker', freq:'518.100 MHz', status:'active' },
-    { num:2, actor:'Sarah K.', character:'Baker\'s Wife', freq:'518.500 MHz', status:'active' },
-    { num:3, actor:'Tom R.', character:'Cinderella\'s Prince', freq:'519.000 MHz', status:'active' },
-    { num:4, actor:'Emma L.', character:'Cinderella', freq:'519.500 MHz', status:'active' },
-    { num:5, actor:'Chris P.', character:'Little Red', freq:'520.000 MHz', status:'active' },
-    { num:6, actor:'Nina B.', character:'Jack', freq:'520.500 MHz', status:'active' },
-    { num:7, actor:'Diana W.', character:'Witch', freq:'521.000 MHz', status:'active' },
-    { num:8, actor:'Marcus T.', character:'Narrator', freq:'521.500 MHz', status:'active' },
-    { num:9, actor:'Lily F.', character:'Jack\'s Mother', freq:'522.000 MHz', status:'off' },
-    { num:10, actor:'Ryan S.', character:'Rapunzel', freq:'522.500 MHz', status:'off' },
-    { num:11, actor:'Alex D.', character:'Rapunzel\'s Prince', freq:'523.000 MHz', status:'off' },
-    { num:12, actor:'Ensemble A', character:'Ensemble', freq:'523.500 MHz', status:'active' },
-    { num:13, actor:'Ensemble B', character:'Ensemble', freq:'524.000 MHz', status:'active' },
-    { num:14, actor:'Ensemble C', character:'Ensemble', freq:'524.500 MHz', status:'off' },
-    { num:15, actor:'Ensemble D', character:'Ensemble', freq:'525.000 MHz', status:'off' },
-    { num:16, actor:'Ensemble E', character:'Ensemble', freq:'525.500 MHz', status:'off' },
+    { num:1,  actor:'Jake M.',    character:'Baker',              freq:'518.100 MHz', status:'active', shortName:'JAKE',    dcaGroups:['1','2'], muteGroups:['1'], packType:'Lavalier' },
+    { num:2,  actor:'Sarah K.',   character:"Baker's Wife",       freq:'518.500 MHz', status:'active', shortName:'SARAH',   dcaGroups:['1','2'], muteGroups:['1'], packType:'Lavalier' },
+    { num:3,  actor:'Tom R.',     character:"Cinderella's Prince",freq:'519.000 MHz', status:'active', shortName:'TOM',     dcaGroups:['3'],     muteGroups:['2'], packType:'Headset' },
+    { num:4,  actor:'Emma L.',    character:'Cinderella',         freq:'519.500 MHz', status:'active', shortName:'EMMA',    dcaGroups:['1','3'], muteGroups:['1'], packType:'Lavalier' },
+    { num:5,  actor:'Chris P.',   character:'Little Red',         freq:'520.000 MHz', status:'active', shortName:'CHRIS',   dcaGroups:['1'],     muteGroups:['1'], packType:'Headset' },
+    { num:6,  actor:'Nina B.',    character:'Jack',               freq:'520.500 MHz', status:'active', shortName:'NINA',    dcaGroups:['1'],     muteGroups:['1'], packType:'Lavalier' },
+    { num:7,  actor:'Diana W.',   character:'Witch',              freq:'521.000 MHz', status:'active', shortName:'DIANA',   dcaGroups:['1','4'], muteGroups:['1'], packType:'Headset' },
+    { num:8,  actor:'Marcus T.',  character:'Narrator',           freq:'521.500 MHz', status:'active', shortName:'MARCUS',  dcaGroups:['4'],     muteGroups:[],    packType:'Handheld' },
+    { num:9,  actor:'Lily F.',    character:"Jack's Mother",      freq:'522.000 MHz', status:'off',    shortName:'LILY',    dcaGroups:['2'],     muteGroups:['2'], packType:'Lavalier' },
+    { num:10, actor:'Ryan S.',    character:'Rapunzel',           freq:'522.500 MHz', status:'off',    shortName:'RYAN',    dcaGroups:['3'],     muteGroups:['2'], packType:'Headset' },
+    { num:11, actor:'Alex D.',    character:"Rapunzel's Prince",  freq:'523.000 MHz', status:'off',    shortName:'ALEX',    dcaGroups:['3'],     muteGroups:['2'], packType:'Headset' },
+    { num:12, actor:'Ensemble A', character:'Ensemble',           freq:'523.500 MHz', status:'active', shortName:'ENS-A',   dcaGroups:['2'],     muteGroups:['3'], packType:'Lavalier' },
+    { num:13, actor:'Ensemble B', character:'Ensemble',           freq:'524.000 MHz', status:'active', shortName:'ENS-B',   dcaGroups:['2'],     muteGroups:['3'], packType:'Lavalier' },
+    { num:14, actor:'Ensemble C', character:'Ensemble',           freq:'524.500 MHz', status:'off',    shortName:'ENS-C',   dcaGroups:['2'],     muteGroups:['3'], packType:'Lavalier' },
+    { num:15, actor:'Ensemble D', character:'Ensemble',           freq:'525.000 MHz', status:'off',    shortName:'ENS-D',   dcaGroups:['2'],     muteGroups:['3'], packType:'Lavalier' },
+    { num:16, actor:'Ensemble E', character:'Ensemble',           freq:'525.500 MHz', status:'off',    shortName:'ENS-E',   dcaGroups:['2'],     muteGroups:['3'], packType:'Lavalier' },
   ];
   state.scenes = [
     { name:'Act 1 Opening', dmScene:'1', notes:'All channels active, DCA 1 pre-faded', current:true },
@@ -2655,22 +3329,22 @@ function loadDemo() {
     { name:'Final Curtain', dmScene:'10', notes:'All up, bow mix', current:false },
   ];
   state.cues = [
-    { scene:'ACT 1 · Prologue', character:'Narrator', line:'Once upon a time…', action:'unmute', actionVal:'8', urgency:'normal' },
-    { scene:'ACT 1 · Prologue', character:'Baker', line:'There were two siblings…', action:'unmute', actionVal:'1', urgency:'normal' },
-    { scene:'ACT 1 · Prologue', character:'ALL', line:'★ INTO THE WOODS — scene recall', action:'scene', actionVal:'2', urgency:'critical' },
-    { scene:'ACT 1 · Sc1', character:'Baker\'s Wife', line:'I wish…', action:'unmute', actionVal:'2', urgency:'normal' },
-    { scene:'ACT 1 · Sc1', character:'Cinderella', line:'I wish…', action:'unmute', actionVal:'4', urgency:'normal' },
-    { scene:'ACT 1 · Sc1', character:'Little Red', line:'I wish…', action:'unmute', actionVal:'5', urgency:'normal' },
-    { scene:'ACT 1 · Sc1', character:'Jack', line:'I wish…', action:'unmute', actionVal:'6', urgency:'normal' },
-    { scene:'ACT 1 · Sc2', character:'A2 NOTE', line:'Swap: ch12 Ensemble A → Baker\'s Wife double', action:'swap', actionVal:'ch12→BW', urgency:'warn' },
-    { scene:'ACT 1 · Sc2', character:'Witch', line:'Boom, crackle, doom!', action:'scene', actionVal:'3', urgency:'critical' },
-    { scene:'ACT 1 · Sc3', character:'Prince', line:'Agony…', action:'scene', actionVal:'5', urgency:'normal' },
-    { scene:'ACT 1 · Finale', character:'ALL', line:'★ ACT 1 FINALE — boost all DCA', action:'scene', actionVal:'6', urgency:'critical' },
-    { scene:'INTERMISSION', character:'A2 NOTE', line:'Collect mics: ch9,10,11 for re-battery', action:'mute', actionVal:'all', urgency:'warn' },
-    { scene:'INTERMISSION', character:'A2 NOTE', line:'Re-check: Witch pack battery before Act 2', action:'note', actionVal:'', urgency:'warn' },
-    { scene:'ACT 2 · Opening', character:'ALL', line:'★ ACT 2 BEGINS — full mix', action:'scene', actionVal:'8', urgency:'critical' },
-    { scene:'ACT 2 · Sc5', character:'Baker', line:'No one is alone…', action:'scene', actionVal:'9', urgency:'normal' },
-    { scene:'ACT 2 · Finale', character:'ALL', line:'★ CURTAIN — bow mix', action:'scene', actionVal:'10', urgency:'critical' },
+    { cueNumber:1,    scene:'ACT 1 · Prologue', character:'Narrator',       line:'Once upon a time\u2026',                            action:'unmute', actionVal:'8',      urgency:'normal' },
+    { cueNumber:2,    scene:'ACT 1 · Prologue', character:'Baker',          line:'There were two siblings\u2026',                     action:'unmute', actionVal:'1',      urgency:'normal' },
+    { cueNumber:3,    scene:'ACT 1 · Prologue', character:'ALL',            line:'\u2605 INTO THE WOODS \u2014 scene recall',          action:'scene',  actionVal:'2',      urgency:'critical' },
+    { cueNumber:4,    scene:'ACT 1 \u00B7 Sc1', character:"Baker's Wife",   line:'I wish\u2026',                                      action:'unmute', actionVal:'2',      urgency:'normal' },
+    { cueNumber:4.1,  scene:'ACT 1 \u00B7 Sc1', character:'Cinderella',     line:'I wish\u2026',                                      action:'unmute', actionVal:'4',      urgency:'normal' },
+    { cueNumber:4.2,  scene:'ACT 1 \u00B7 Sc1', character:'Little Red',     line:'I wish\u2026',                                      action:'unmute', actionVal:'5',      urgency:'normal' },
+    { cueNumber:4.3,  scene:'ACT 1 \u00B7 Sc1', character:'Jack',           line:'I wish\u2026',                                      action:'unmute', actionVal:'6',      urgency:'normal' },
+    { cueNumber:5,    scene:'ACT 1 \u00B7 Sc2', character:'A2 NOTE',        line:"Swap: ch12 Ensemble A \u2192 Baker's Wife double",  action:'swap',   actionVal:'ch12\u2192BW', urgency:'warn' },
+    { cueNumber:6,    scene:'ACT 1 \u00B7 Sc2', character:'Witch',          line:'Boom, crackle, doom!',                              action:'scene',  actionVal:'3',      urgency:'critical' },
+    { cueNumber:7,    scene:'ACT 1 \u00B7 Sc3', character:'Prince',         line:'Agony\u2026',                                       action:'scene',  actionVal:'5',      urgency:'normal' },
+    { cueNumber:8,    scene:'ACT 1 \u00B7 Finale', character:'ALL',         line:'\u2605 ACT 1 FINALE \u2014 boost all DCA',          action:'scene',  actionVal:'6',      urgency:'critical' },
+    { cueNumber:9,    scene:'INTERMISSION',      character:'A2 NOTE',       line:'Collect mics: ch9,10,11 for re-battery',            action:'mute',   actionVal:'all',    urgency:'warn' },
+    { cueNumber:9.1,  scene:'INTERMISSION',      character:'A2 NOTE',       line:'Re-check: Witch pack battery before Act 2',         action:'note',   actionVal:'',       urgency:'warn' },
+    { cueNumber:10,   scene:'ACT 2 \u00B7 Opening', character:'ALL',        line:'\u2605 ACT 2 BEGINS \u2014 full mix',               action:'scene',  actionVal:'8',      urgency:'critical' },
+    { cueNumber:11,   scene:'ACT 2 \u00B7 Sc5', character:'Baker',          line:'No one is alone\u2026',                            action:'scene',  actionVal:'9',      urgency:'normal' },
+    { cueNumber:12,   scene:'ACT 2 \u00B7 Finale', character:'ALL',         line:'\u2605 CURTAIN \u2014 bow mix',                     action:'scene',  actionVal:'10',     urgency:'critical' },
   ];
   state.flow = [
     { act:'Act 1', name:'Prologue', type:'scene', estTime:'2:30', current:true },
@@ -2957,6 +3631,9 @@ load();
 applyLoadedState();
 startClock();
 renderCues();
+// Seed cue number input
+const _cnInput = document.getElementById('newCueNum');
+if (_cnInput) _cnInput.value = formatCueNum(nextCueNumber());
 setTimeout(startBridgePoll, 2000);
 setTimeout(startULXDPoll, 4000);
 </script>
