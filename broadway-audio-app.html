@@ -1286,52 +1286,76 @@
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
-  .strip-meters {
+  /* ── FIXED INFO BOX — RF/BAT, badges, frequency ── */
+  .strip-info {
+    height: 72px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    background: var(--bg1);
+    padding: 4px 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-sizing: border-box;
+  }
+  .strip-info-rf-bat {
     display: flex;
     gap: 6px;
-    padding: 4px 8px;
     justify-content: center;
-    flex-shrink: 0;
     align-items: flex-end;
+    height: 16px;
+    flex-shrink: 0;
   }
-  .strip-meter { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-  .strip-meter-label { font-family: var(--mono); font-size: 8px; color: var(--text3); letter-spacing: 0.05em; margin-bottom: 2px; }
-  .strip-meter-bars { display: flex; flex-direction: column-reverse; gap: 2px; }
-  .strip-meter-seg { width: 14px; height: 8px; background: var(--bg3); flex-shrink: 0; }
-  .strip-rf-seg   { width: 10px; height: 9px; }
-  .strip-meter-seg.lit-green { background: var(--green); }
-  .strip-meter-seg.lit-amber { background: var(--amber); }
-  .strip-meter-seg.lit-red   { background: var(--red); }
-  .strip-groups { padding: 2px 4px; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; min-height: 0; }
-  .strip-group-row { display: flex; gap: 2px; flex-wrap: wrap; align-items: center; }
-  .strip-group-label { font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: 0.05em; margin-right: 1px; }
-  .strip-group-badge { font-family: var(--mono); font-size: 8px; font-weight: 700; padding: 0px 3px; border: 1px solid; }
-  .strip-dca-label  { color: var(--amber); }
-  .strip-dca-badge  { color: var(--amber); border-color: var(--amber); }
-  .strip-mut-label  { color: var(--red); }
-  .strip-mut-badge  { color: var(--red); border-color: var(--red); }
-  .strip-freq {
+  .strip-info-badges {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    height: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .strip-info-freq {
     font-family: var(--mono);
     font-size: 9px;
     color: var(--text3);
     text-align: center;
-    padding: 2px 4px;
+    height: 14px;
+    line-height: 14px;
+    flex-shrink: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex-shrink: 0;
   }
+  .strip-meter { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .strip-meter-label { font-family: var(--mono); font-size: 7px; color: var(--text3); letter-spacing: 0.04em; margin-bottom: 1px; }
+  .strip-meter-bars { display: flex; flex-direction: column-reverse; gap: 1px; }
+  .strip-meter-seg { width: 12px; height: 6px; background: var(--bg3); flex-shrink: 0; }
+  .strip-rf-seg   { width: 9px; height: 7px; }
+  .strip-meter-seg.lit-green { background: var(--green); }
+  .strip-meter-seg.lit-amber { background: var(--amber); }
+  .strip-meter-seg.lit-red   { background: var(--red); }
+  .strip-group-label { font-family: var(--mono); font-size: 7px; font-weight: 700; letter-spacing: 0.04em; margin-right: 1px; }
+  .strip-group-badge { font-family: var(--mono); font-size: 7px; font-weight: 700; padding: 0px 2px; border: 1px solid; }
+  .strip-dca-label  { color: var(--amber); }
+  .strip-dca-badge  { color: var(--amber); border-color: var(--amber); }
+  .strip-mut-label  { color: var(--red); }
+  .strip-mut-badge  { color: var(--red); border-color: var(--red); }
   .strip-ch-num {
     background: var(--bg1);
     border-top: 1px solid var(--border);
-    padding: 4px;
-    text-align: center;
+    height: 24px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text2);
     letter-spacing: 0.04em;
     flex-shrink: 0;
   }
+  .console-strip.off { opacity: 0.35; }
   /* ── SIGNAL METER SECTION — fader position (left) + signal bars (right) ── */
   .strip-signal {
     flex: 1;
@@ -1454,11 +1478,13 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(to top,
-      #003300 0%,   #003300 60%,      /* -60 to -18 dB */
-      #004400 60%,  #004400 68.57%,   /* -18 to -12 dB */
-      #333300 68.57%,#333300 81.43%,  /* -12 to  -3 dB */
-      #332200 81.43%,#332200 85.71%,  /*  -3 to   0 dB */
-      #330000 85.71%,#330000 100%     /*   0 to +10 dB */
+      #001500  0%,    #001500  10%,   /* -∞ to -60 dB floor */
+      #002200  10%,   #002200  25%,   /* -60 to -30 dB dark green */
+      #003300  25%,   #003300  50%,   /* -30 to -18 dB green */
+      #004200  50%,   #004200  65%,   /* -18 to -12 dB bright green */
+      #333300  65%,   #333300  85%,   /* -12 to  -3 dB yellow */
+      #332200  85%,   #332200  92%,   /*  -3 to   0 dB orange */
+      #330000  92%,   #330000  100%   /*   0 to +10 dB red */
     );
   }
   /* Bright signal fill — clips from bottom up to current level */
@@ -1469,11 +1495,13 @@
     right: 0;
     height: 0%;
     background: linear-gradient(to top,
-      #00cc44 0%,   #00cc44 60%,      /* -60 to -18 dB  green */
-      #00ff66 60%,  #00ff66 68.57%,   /* -18 to -12 dB  bright green */
-      #cccc00 68.57%,#cccc00 81.43%,  /* -12 to  -3 dB  yellow */
-      #e8850a 81.43%,#e8850a 85.71%,  /*  -3 to   0 dB  orange */
-      #cc2200 85.71%,#cc2200 100%     /*   0 to +10 dB  red */
+      #006622  0%,    #006622  10%,   /* -∞ to -60 dB floor */
+      #00aa33  10%,   #00aa33  25%,   /* -60 to -30 dB dark green */
+      #00cc44  25%,   #00cc44  50%,   /* -30 to -18 dB green */
+      #00ff66  50%,   #00ff66  65%,   /* -18 to -12 dB bright green */
+      #cccc00  65%,   #cccc00  85%,   /* -12 to  -3 dB yellow */
+      #e8850a  85%,   #e8850a  92%,   /*  -3 to   0 dB orange */
+      #cc2200  92%,   #cc2200  100%   /*   0 to +10 dB red */
     );
     transition: height 0.05s ease-out;
   }
@@ -2308,33 +2336,68 @@ function renderChannels() {
 }
 
 // Fader scale — label positions as % from bottom (X32/DM7 log taper)
+// 0dB (fader 0.75) aligns visually with meter -12dB zone (65%)
 const _FADER_SCALE = [
-  { label: 'OVR', pct: 98 },
-  { label: '0',   pct: 75 },
-  { label: '6',   pct: 65 },
-  { label: '12',  pct: 57 },
-  { label: '18',  pct: 50 },
-  { label: '30',  pct: 37 },
+  { label: '+10', pct: 97 },
+  { label: '+5',  pct: 81 },
+  { label: '0',   pct: 65 },
+  { label: '-5',  pct: 62 },
+  { label: '-10', pct: 57 },
+  { label: '-15', pct: 50 },
+  { label: '-20', pct: 42 },
+  { label: '-30', pct: 27 },
+  { label: '-40', pct: 18 },
+  { label: '-60', pct: 7  },
   { label: '∞',   pct: 0  },
 ];
 
-// Meter scale — dB values and their % position from bottom
-// Linear mapping: pct = (db + 60) / 70 * 100
+// Meter scale — dB zone boundary positions (% from bottom)
+// Logarithmic proportional spacing matching DM7 visual taper
 const _METER_SCALE = [
-  { label: '0',   pct: 85.7 },
-  { label: '-6',  pct: 77.1 },
-  { label: '-12', pct: 68.6 },
-  { label: '-18', pct: 60.0 },
-  { label: '-30', pct: 42.9 },
-  { label: '-60', pct: 0.0  },
+  { label: '0',   pct: 92 },
+  { label: '-3',  pct: 85 },
+  { label: '-12', pct: 65 },
+  { label: '-18', pct: 50 },
+  { label: '-30', pct: 25 },
+  { label: '-60', pct: 10 },
 ];
 
 // Per-channel clip hold timestamps (ms) — clip indicator holds 2s after clip
 const clipHold = {};
 
+// Piecewise log taper matching DM7 zone proportions
+// Breakpoints: [dB, pct_from_bottom]
 function dbToPct(db) {
   if (db === null || db === undefined) return 0;
-  return Math.max(0, Math.min(100, (db + 60) / 70 * 100));
+  const bp = [[-70,0],[-60,10],[-30,25],[-18,50],[-12,65],[-3,85],[0,92],[10,100]];
+  if (db <= bp[0][0]) return 0;
+  if (db >= bp[bp.length-1][0]) return 100;
+  for (let i = 1; i < bp.length; i++) {
+    if (db <= bp[i][0]) {
+      const t = (db - bp[i-1][0]) / (bp[i][0] - bp[i-1][0]);
+      return bp[i-1][1] + t * (bp[i][1] - bp[i-1][1]);
+    }
+  }
+  return 0;
+}
+
+// Fader value (0.0–1.0) to visual % from bottom
+// DM7/X32 log taper: 0.75=0dB aligns with meter -12dB zone at 65%
+function faderValToPct(val) {
+  if (val === null || val === undefined || val <= 0) return 0;
+  if (val >= 1) return 97;
+  const bp = [
+    [0.000,  0], [0.060,  7], [0.250, 18], [0.370, 27],
+    [0.500, 42], [0.585, 50], [0.630, 57], [0.690, 62],
+    [0.750, 65], [0.875, 81], [1.000, 97]
+  ];
+  for (let i = 1; i < bp.length; i++) {
+    if (val <= bp[i][0]) {
+      const t = (val - bp[i-1][0]) / (bp[i][0] - bp[i-1][0]);
+      return bp[i-1][1] + t * (bp[i][1] - bp[i-1][1]);
+    }
+  }
+  return 97;
 }
 
 function buildSignalSection(chNum) {
@@ -2342,7 +2405,7 @@ function buildSignalSection(chNum) {
   const hasData = fd !== undefined && fd.fader !== null;
   const faderVal = hasData ? fd.fader : 0;
   const isMuted  = fd ? fd.on === false : false;
-  const faderPct = hasData ? (faderVal * 100).toFixed(1) : '0';
+  const faderPct = hasData ? faderValToPct(faderVal).toFixed(1) : '0';
 
   const db = state.meters[chNum];
   const meterPct = dbToPct(db).toFixed(1);
@@ -2418,29 +2481,34 @@ function renderChannelStrips() {
     for (let s = 1; s <= 5; s++) battMeter += `<div class="strip-meter-seg${s <= (batt||0) && batt !== null ? ' '+battCls : ''}"></div>`;
     battMeter += `</div></div>`;
 
-    // Group badges
+    // Group badges — cap at 2 each, show +N for overflow
     const dca  = ch.dcaGroups  || [];
     const mute = ch.muteGroups || [];
-    let groupsHtml = '<div class="strip-groups">';
-    if (dca.length > 0)  { groupsHtml += `<div class="strip-group-row"><span class="strip-group-label strip-dca-label">DCA</span>${dca.map(g=>`<span class="strip-group-badge strip-dca-badge">${esc(g)}</span>`).join('')}</div>`; }
-    if (mute.length > 0) { groupsHtml += `<div class="strip-group-row"><span class="strip-group-label strip-mut-label">MUT</span>${mute.map(g=>`<span class="strip-group-badge strip-mut-badge">${esc(g)}</span>`).join('')}</div>`; }
-    groupsHtml += '</div>';
+    const dcaBadges = dca.slice(0,2).map(g=>`<span class="strip-group-badge strip-dca-badge">${esc(g)}</span>`).join('');
+    const dcaMore   = dca.length > 2 ? `<span style="font-family:var(--mono);font-size:7px;color:var(--text3)">+${dca.length-2}</span>` : '';
+    const mutBadges = mute.slice(0,2).map(g=>`<span class="strip-group-badge strip-mut-badge">${esc(g)}</span>`).join('');
+    const mutMore   = mute.length > 2 ? `<span style="font-family:var(--mono);font-size:7px;color:var(--text3)">+${mute.length-2}</span>` : '';
+    let badgesHtml = '';
+    if (dca.length > 0)  badgesHtml += `<span class="strip-group-label strip-dca-label">DCA</span>${dcaBadges}${dcaMore}`;
+    if (mute.length > 0) badgesHtml += `<span class="strip-group-label strip-mut-label">MUT</span>${mutBadges}${mutMore}`;
 
     const freqShort = (ch.freq || '').replace(' MHz','').replace('MHz','');
     const chNum = ch.num || (i+1);
     const fd = faderData[chNum];
     const isMuted = fd ? fd.on === false : null;
     const nameplateStyle = isMuted ? ' style="opacity:0.4"' : '';
-    return `<div class="console-strip" data-ch="${chNum}" onclick="editChannel(${i})">
+    return `<div class="console-strip${status === 'off' ? ' off' : ''}" data-ch="${chNum}" onclick="editChannel(${i})">
       <div class="strip-nameplate ${status}"${nameplateStyle}>
         <div class="strip-status-badge">${statusLabel}</div>
         <div class="strip-short-name">${esc(shortName)}</div>
       </div>
       <div class="strip-char-name">${esc((ch.character || '').slice(0, 11))}</div>
       ${buildSignalSection(chNum)}
-      <div class="strip-meters">${rfMeter}${battMeter}</div>
-      ${groupsHtml}
-      <div class="strip-freq">${esc(freqShort)}</div>
+      <div class="strip-info">
+        <div class="strip-info-rf-bat">${rfMeter}${battMeter}</div>
+        <div class="strip-info-badges">${badgesHtml}</div>
+        <div class="strip-info-freq">${esc(freqShort)}</div>
+      </div>
       <div class="strip-ch-num">CH ${chNum}</div>
     </div>`;
   }).join('');
@@ -3767,7 +3835,7 @@ function updateStripInPlace(chNum) {
   // Fader cap + mute dim
   if (fd !== undefined) {
     const hasData  = fd.fader !== null;
-    const faderPct = hasData ? (fd.fader * 100).toFixed(1) : '0';
+    const faderPct = hasData ? faderValToPct(fd.fader).toFixed(1) : '0';
     const isMuted  = fd.on === false;
 
     const cap = strip.querySelector('.ssf-cap');
