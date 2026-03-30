@@ -141,6 +141,18 @@ and talking points for the technical team.
 - **Show-night startup command** — `npm run bridge:watch` (nodemon) is the recommended startup;
   automatically restarts on crash or manual restart, no terminal babysitting required
 
+## CH Strips — live fader meters
+
+- **Live fader position meters** — vertical VU-style display per strip matching DM7
+  aesthetic: green/amber/red bar with dB scale (OVR → 60) and white fader cap
+- **Post-fader level display with dB scale** — 13-point scale (OVR, 0, 3 … 60) placed
+  at correct positions along the meter per the X32/DM7 fader taper
+- **Mute state reflected** — when DM7 reports channel off (`/ch/NN/mix/on = 0`),
+  meter bar turns red and nameplate dims to 40% opacity; POST ON / MUTED label below meter
+- **2-second poll via GET /dm7/faders** — bridge queries all 32 channels in parallel with
+  300ms timeout per channel; frontend updates meters in-place (CSS transitions preserved)
+- **Display only** — no writes to console; fader meters are read-only telemetry (Session B)
+
 ## Planned / upcoming
 - [ ] Real DM7 + ULXD test at the theatre
 - [ ] Channel editor — frequency assignment from ULXD scan

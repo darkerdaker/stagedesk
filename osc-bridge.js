@@ -22,6 +22,7 @@ const PUSHOVER_GROUP      = process.env.PUSHOVER_GROUP  || '';
 const BATTERY_WARN_BARS     = parseInt(process.env.BATTERY_WARN_BARS,     10) || 2;
 const BATTERY_CRITICAL_BARS = parseInt(process.env.BATTERY_CRITICAL_BARS, 10) || 1;
 const ANTHROPIC_API_KEY     = process.env.ANTHROPIC_API_KEY || '';
+const OSC_LISTEN_PORT       = parseInt(process.env.OSC_LISTEN_PORT, 10) || 3001;
 
 // ── Multer (PDF uploads, memory storage) ─────────────────────────────────────
 const upload = multer({
@@ -228,7 +229,23 @@ function checkBatteryAndNotify(receivers) {
 }
 
 // ── OSC UDP client ────────────────────────────────────────────────────────────
-const udpClient = dgram.createSocket('udp4');
+const udpClient = dgram.createSocket({ type: 'udp4', reuseAddr: true });
+
+// Pending OSC get requests — keyed by OSC path, resolved when DM7 replies
+const _pendingOSCGets = new Map();
+
+udpClient.on('message', (msg) => {
+  try {
+    const packet = osc.readPacket(msg, {});
+    if (!packet?.address) return;
+    const pending = _pendingOSCGets.get(packet.address);
+    if (pending) {
+      clearTimeout(pending.timer);
+      _pendingOSCGets.delete(packet.address);
+      pending.resolve(packet.args || []);
+    }
+  } catch (_) {}
+});
 
 function sendOSC(path, args) {
   // args should be an array of { type, value } objects
@@ -243,6 +260,24 @@ function sendOSC(path, args) {
   });
   const argsStr = args.map(a => `${a.type}:${a.value}`).join(', ');
   log('OSC', `→ ${DM7_IP}:${DM7_OSC_PORT}  ${path}  [${argsStr}]`);
+}
+
+// getOSC — X32-compatible get request: send path with no args, await DM7 reply.
+// Returns args array on success, null on timeout (DM7 offline).
+// Sends directly without logging to avoid 64 log lines per fader poll.
+function getOSC(path, timeoutMs = 300) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      _pendingOSCGets.delete(path);
+      resolve(null);
+    }, timeoutMs);
+    _pendingOSCGets.set(path, { resolve, timer });
+    const oscMsg = osc.writePacket({ address: path, args: [] });
+    const buf = Buffer.from(oscMsg);
+    udpClient.send(buf, 0, buf.length, DM7_OSC_PORT, DM7_IP, (err) => {
+      if (err) log('OSC', `Get send error: ${err.message}`);
+    });
+  });
 }
 
 // ── MIDI output ───────────────────────────────────────────────────────────────
@@ -502,6 +537,33 @@ app.post('/panic', (req, res) => {
   }
 });
 
+// GET /dm7/faders — read fader position and mute state for all 32 channels.
+// Queries DM7 via OSC get requests (X32 protocol: send path with no args, read reply).
+// All 32 channels queried in parallel; 300ms timeout per channel.
+// Returns { channels: [{ch, fader, on}...], timestamp } — fader/on are null if no reply.
+app.get('/dm7/faders', async (req, res) => {
+  const t0 = Date.now();
+  log('HTTP', 'GET /dm7/faders');
+
+  const channels = await Promise.all(
+    Array.from({ length: 32 }, (_, i) => i + 1).map(async (ch) => {
+      const chStr = String(ch).padStart(2, '0');
+      const [faderArgs, onArgs] = await Promise.all([
+        getOSC(`/ch/${chStr}/mix/fader`),
+        getOSC(`/ch/${chStr}/mix/on`),
+      ]);
+      return {
+        ch,
+        fader: faderArgs !== null ? (faderArgs[0]?.value ?? null) : null,
+        on:    onArgs   !== null ? (onArgs[0]?.value === 1)       : null,
+      };
+    })
+  );
+
+  log('DM7', `Fader poll — 32 channels in ${Date.now() - t0}ms`);
+  res.json({ channels, timestamp: new Date().toISOString() });
+});
+
 // POST /ai/parse-script — upload a PDF script, get back a structured show JSON
 // Hybrid approach: text extraction for digital PDFs (fast/cheap),
 // Claude Vision for scanned PDFs (up to 40 pages at 150 DPI).
@@ -669,10 +731,16 @@ function parseClaudeJSON(text) {
 // ── Start ─────────────────────────────────────────────────────────────────────
 initMidi();
 
+// Bind UDP socket to a fixed local port so DM7 OSC responses return here.
+// Must be done before first send so all outgoing packets carry this source port.
+udpClient.bind(OSC_LISTEN_PORT, () => {
+  log('OSC', `UDP socket bound on :${OSC_LISTEN_PORT} (DM7 response listener ready)`);
+});
+
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
-  log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /pushover/test  GET /logs  GET /restart  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
+  log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}  OSC listen port: ${OSC_LISTEN_PORT}`);
+  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /dm7/faders  GET /pushover/test  GET /logs  GET /restart  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
   log('SERVER', `AI script import: ${ANTHROPIC_API_KEY ? 'enabled (vision+text)' : 'disabled (set ANTHROPIC_API_KEY in .env)'}`);
   log('SERVER', `Pushover: ${(PUSHOVER_TOKEN && PUSHOVER_GROUP) ? `enabled (warn≤${BATTERY_WARN_BARS} critical≤${BATTERY_CRITICAL_BARS})` : 'disabled (set PUSHOVER_TOKEN + PUSHOVER_GROUP in .env)'}`);
   if (ULXD_IPS.length > 0) {

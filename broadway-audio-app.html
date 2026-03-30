@@ -1287,9 +1287,9 @@
   .strip-meters {
     display: flex;
     gap: 6px;
-    padding: 6px 8px;
+    padding: 4px 8px;
     justify-content: center;
-    flex: 1;
+    flex-shrink: 0;
     align-items: flex-end;
   }
   .strip-meter { display: flex; flex-direction: column; align-items: center; gap: 1px; }
@@ -1330,19 +1330,80 @@
     letter-spacing: 0.04em;
     flex-shrink: 0;
   }
+  /* ── FADER POSITION METER (strips view) ── */
   .strip-fader {
-    height: 30px;
-    flex-shrink: 0;
+    flex: 1;
+    min-height: 80px;
+    padding: 5px 8px 2px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    padding-bottom: 4px;
-    position: relative;
     border-top: 1px solid var(--border);
+    gap: 2px;
   }
-  .strip-fader-track { width: 1px; height: 100%; background: var(--border2); position: absolute; top: 0; left: 50%; }
-  .strip-fader-cap   { width: 22px; height: 7px; background: var(--border2); position: relative; z-index: 1; }
+  .sfd-meter {
+    flex: 1;
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .sfd-bar-bg {
+    position: absolute;
+    width: 8px;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg3);
+  }
+  .sfd-fill {
+    position: absolute;
+    width: 8px;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: height 0.15s ease-out;
+  }
+  .sfd-cap {
+    position: absolute;
+    width: 14px;
+    height: 4px;
+    background: #c8ccd4;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: bottom 0.15s ease-out;
+    z-index: 2;
+  }
+  .sfd-scale-label {
+    position: absolute;
+    right: 2px;
+    font-family: var(--mono);
+    font-size: 7px;
+    color: var(--text3);
+    line-height: 1;
+    transform: translateY(50%);
+    pointer-events: none;
+  }
+  .sfd-post {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    text-align: center;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .sfd-post.muted { color: var(--red); }
+  .sfd-no-data {
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 7px;
+    color: var(--red);
+    letter-spacing: 0.05em;
+  }
 
   /* ── DCA/MUTE BADGES (grid cards) ── */
   .ch-groups { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
@@ -1903,8 +1964,8 @@ function showPage(p) {
   if (mb) mb.classList.add('active');
   const leaving = currentPage;
   currentPage = p;
-  if (p === 'channels') { startULXDPoll(); renderChannels(); }
-  else if (leaving === 'channels') stopULXDPoll();
+  if (p === 'channels') { startULXDPoll(); renderChannels(); if ((state.channelView || 'grid') === 'strips') startFaderPoll(); }
+  else if (leaving === 'channels') { stopULXDPoll(); stopFaderPoll(); }
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
   if (p === 'a2swap') renderA2Swap();
@@ -2149,6 +2210,62 @@ function renderChannels() {
   }).join('');
 }
 
+// dB label positions as % from bottom of meter (approximate X32/DM7 fader taper)
+const _FADER_SCALE = [
+  { label: 'OVR', pct: 98 },
+  { label: '0',   pct: 75 },
+  { label: '3',   pct: 70 },
+  { label: '6',   pct: 65 },
+  { label: '9',   pct: 61 },
+  { label: '12',  pct: 57 },
+  { label: '15',  pct: 53 },
+  { label: '18',  pct: 50 },
+  { label: '24',  pct: 43 },
+  { label: '30',  pct: 37 },
+  { label: '40',  pct: 28 },
+  { label: '50',  pct: 20 },
+  { label: '60',  pct: 12 },
+];
+
+function buildFaderMeter(chNum) {
+  const fd = faderData[chNum];
+  const hasData = fd !== undefined && fd.fader !== null;
+  const faderVal = hasData ? fd.fader : 0;
+  const isMuted = fd ? fd.on === false : null;
+
+  const fillPct = hasData ? (faderVal * 100).toFixed(1) : 0;
+  let fillColor;
+  if (isMuted)           fillColor = 'var(--red)';
+  else if (faderVal >= 0.90) fillColor = '#cc2200';
+  else if (faderVal >= 0.80) fillColor = '#e8850a';
+  else                       fillColor = '#00cc44';
+
+  const scaleHtml = _FADER_SCALE.map(s =>
+    `<div class="sfd-scale-label" style="bottom:${s.pct}%">${s.label}</div>`
+  ).join('');
+
+  const noDataHtml = (fd !== undefined && !hasData)
+    ? '<div class="sfd-no-data">NO DATA</div>' : '';
+
+  let postLabel = '';
+  let postClass = '';
+  if (fd !== undefined) {
+    if (isMuted) { postLabel = 'MUTED'; postClass = ' muted'; }
+    else if (fd.on === true) postLabel = 'POST ON';
+  }
+
+  return `<div class="strip-fader">
+      <div class="sfd-meter">
+        <div class="sfd-bar-bg"></div>
+        <div class="sfd-fill" style="height:${fillPct}%;background:${fillColor}"></div>
+        <div class="sfd-cap" style="bottom:calc(${fillPct}% - 2px)"></div>
+        ${scaleHtml}
+        ${noDataHtml}
+      </div>
+      <div class="sfd-post${postClass}">${postLabel}</div>
+    </div>`;
+}
+
 function renderChannelStrips() {
   const container = document.getElementById('channelStrips');
   if (!container) return;
@@ -2186,17 +2303,21 @@ function renderChannelStrips() {
     groupsHtml += '</div>';
 
     const freqShort = (ch.freq || '').replace(' MHz','').replace('MHz','');
-    return `<div class="console-strip" onclick="editChannel(${i})">
-      <div class="strip-nameplate ${status}">
+    const chNum = ch.num || (i+1);
+    const fd = faderData[chNum];
+    const isMuted = fd ? fd.on === false : null;
+    const nameplateStyle = isMuted ? ' style="opacity:0.4"' : '';
+    return `<div class="console-strip" data-ch="${chNum}" onclick="editChannel(${i})">
+      <div class="strip-nameplate ${status}"${nameplateStyle}>
         <div class="strip-status-badge">${statusLabel}</div>
         <div class="strip-short-name">${esc(shortName)}</div>
       </div>
       <div class="strip-char-name">${esc((ch.character || '').slice(0, 11))}</div>
+      ${buildFaderMeter(chNum)}
       <div class="strip-meters">${rfMeter}${battMeter}</div>
       ${groupsHtml}
       <div class="strip-freq">${esc(freqShort)}</div>
-      <div class="strip-ch-num">CH ${ch.num || (i+1)}</div>
-      <div class="strip-fader"><div class="strip-fader-track"></div><div class="strip-fader-cap"></div></div>
+      <div class="strip-ch-num">CH ${chNum}</div>
     </div>`;
   }).join('');
   // Show scroll hint after render (needs layout to be complete)
@@ -2206,6 +2327,8 @@ function renderChannelStrips() {
 function setChannelView(view) {
   state.channelView = view;
   renderChannels();
+  if (view === 'strips') startFaderPoll();
+  else stopFaderPoll();
   save();
 }
 
@@ -3427,6 +3550,73 @@ function startULXDPoll() {
 
 function stopULXDPoll() {
   if (_ulxdPollTimer) { clearInterval(_ulxdPollTimer); _ulxdPollTimer = null; }
+}
+
+// ── FADER POSITION METERS ──
+
+let faderData = {};   // keyed by ch.num: { fader: 0.0-1.0|null, on: bool|null }
+let _faderPollTimer = null;
+
+function fetchFaders() {
+  const bridgeHost = state.console.ip || 'localhost';
+  fetch(`http://${bridgeHost}:3000/dm7/faders`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.channels) return;
+      data.channels.forEach(c => {
+        faderData[c.ch] = { fader: c.fader, on: c.on };
+      });
+      if (currentPage === 'channels' && (state.channelView || 'grid') === 'strips') {
+        data.channels.forEach(c => updateFaderMeterInPlace(c.ch));
+      }
+    })
+    .catch(() => {}); // fail silently when bridge offline
+}
+
+function updateFaderMeterInPlace(chNum) {
+  const container = document.getElementById('channelStrips');
+  if (!container) return;
+  const strip = container.querySelector(`[data-ch="${chNum}"]`);
+  if (!strip) return;
+
+  const fd = faderData[chNum];
+  if (!fd) return;
+
+  const hasData = fd.fader !== null;
+  const faderVal = hasData ? fd.fader : 0;
+  const isMuted = fd.on === false;
+
+  const fillPct = hasData ? (faderVal * 100).toFixed(1) : 0;
+  let fillColor;
+  if (isMuted)               fillColor = 'var(--red)';
+  else if (faderVal >= 0.90) fillColor = '#cc2200';
+  else if (faderVal >= 0.80) fillColor = '#e8850a';
+  else                       fillColor = '#00cc44';
+
+  const fill = strip.querySelector('.sfd-fill');
+  const cap  = strip.querySelector('.sfd-cap');
+  const post = strip.querySelector('.sfd-post');
+  const nameplate = strip.querySelector('.strip-nameplate');
+  const noData = strip.querySelector('.sfd-no-data');
+
+  if (fill) { fill.style.height = `${fillPct}%`; fill.style.background = fillColor; }
+  if (cap)  cap.style.bottom = `calc(${fillPct}% - 2px)`;
+  if (post) {
+    post.textContent = isMuted ? 'MUTED' : (fd.on === true ? 'POST ON' : '');
+    post.className = 'sfd-post' + (isMuted ? ' muted' : '');
+  }
+  if (nameplate) nameplate.style.opacity = isMuted ? '0.4' : '';
+  if (noData) noData.style.display = hasData ? 'none' : '';
+}
+
+function startFaderPoll() {
+  fetchFaders(); // fire immediately on strips view open
+  if (_faderPollTimer) return;
+  _faderPollTimer = setInterval(fetchFaders, 2000);
+}
+
+function stopFaderPoll() {
+  if (_faderPollTimer) { clearInterval(_faderPollTimer); _faderPollTimer = null; }
 }
 
 // ── helpers for card telemetry rendering ──
