@@ -1289,7 +1289,7 @@
   }
   /* ── FIXED INFO BOX — RF/BAT, badges, frequency ── */
   .strip-info {
-    height: 88px;
+    height: 96px;
     flex-shrink: 0;
     overflow: hidden;
     border-top: 1px solid var(--border);
@@ -1302,12 +1302,41 @@
   }
   .strip-info-rf-bat {
     display: flex;
-    gap: 6px;
-    justify-content: center;
-    align-items: flex-end;
-    height: 44px;
+    gap: 4px;
+    align-items: flex-start;
+    height: 54px;
     flex-shrink: 0;
   }
+  .strip-bat-half, .strip-rf-half {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .strip-hbar-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    line-height: 1;
+    margin-bottom: 2px;
+    letter-spacing: 0.04em;
+  }
+  .strip-hbar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .strip-hbar-seg {
+    height: 7px;
+    width: 100%;
+    background: var(--bg3);
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .strip-hbar-seg.lit-green { background: var(--green); }
+  .strip-hbar-seg.lit-amber { background: var(--amber); }
+  .strip-hbar-seg.lit-red   { background: var(--red); }
   .strip-info-badges {
     display: flex;
     gap: 2px;
@@ -1328,14 +1357,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .strip-meter { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-  .strip-meter-label { font-family: var(--mono); font-size: 7px; color: var(--text3); letter-spacing: 0.04em; margin-bottom: 1px; }
-  .strip-meter-bars { display: flex; flex-direction: column-reverse; gap: 1px; }
-  .strip-meter-seg { width: 12px; height: 6px; background: var(--bg3); flex-shrink: 0; }
-  .strip-rf-seg   { width: 9px; height: 7px; }
-  .strip-meter-seg.lit-green { background: var(--green); }
-  .strip-meter-seg.lit-amber { background: var(--amber); }
-  .strip-meter-seg.lit-red   { background: var(--red); }
   .strip-group-label { font-family: var(--mono); font-size: 7px; font-weight: 700; letter-spacing: 0.04em; margin-right: 1px; }
   .strip-group-badge { font-family: var(--mono); font-size: 7px; font-weight: 700; padding: 0px 2px; border: 1px solid; }
   .strip-dca-label  { color: var(--amber); }
@@ -2476,18 +2497,23 @@ function renderChannelStrips() {
     const batt = t ? t.batt_bars : null;
     const rf   = t ? t.rf_level  : null;
 
-    // RF meter (3 segs)
+    // RF indicator — 3 horizontal segs, fill from bottom
     const rfLevel = rf !== null ? (rf > 60 ? 3 : rf > 30 ? 2 : 1) : 0;
     const rfCls   = rfLevel === 3 ? 'lit-green' : rfLevel === 2 ? 'lit-amber' : 'lit-red';
-    let rfMeter   = `<div class="strip-meter"><div class="strip-meter-label">RF</div><div class="strip-meter-bars">`;
-    for (let s = 1; s <= 3; s++) rfMeter += `<div class="strip-meter-seg strip-rf-seg${s <= rfLevel && rfLevel > 0 ? ' '+rfCls : ''}"></div>`;
-    rfMeter += `</div></div>`;
+    let rfSegs = '';
+    for (let i = 1; i <= 3; i++) {
+      const lit = rfLevel > 0 && rfLevel >= (4 - i);
+      rfSegs += `<div class="strip-hbar-seg${lit ? ' '+rfCls : ''}"></div>`;
+    }
 
-    // Battery meter (5 segs)
+    // Battery indicator — 5 horizontal segs, fill from bottom
     const battCls = batt !== null ? (batt >= 3 ? 'lit-green' : batt === 2 ? 'lit-amber' : 'lit-red') : '';
-    let battMeter = `<div class="strip-meter"><div class="strip-meter-label">BAT</div><div class="strip-meter-bars">`;
-    for (let s = 1; s <= 5; s++) battMeter += `<div class="strip-meter-seg${s <= (batt||0) && batt !== null ? ' '+battCls : ''}"></div>`;
-    battMeter += `</div></div>`;
+    let battSegs = '';
+    for (let i = 1; i <= 5; i++) {
+      const lit = batt !== null && batt >= (6 - i);
+      battSegs += `<div class="strip-hbar-seg${lit ? ' '+battCls : ''}"></div>`;
+    }
+    const rfBatHtml = `<div class="strip-bat-half"><div class="strip-hbar-label">BAT</div><div class="strip-hbar-row">${battSegs}</div></div><div class="strip-rf-half"><div class="strip-hbar-label">RF</div><div class="strip-hbar-row">${rfSegs}</div></div>`;
 
     // Group badges — cap at 2 each, show +N for overflow
     const dca  = ch.dcaGroups  || [];
@@ -2513,7 +2539,7 @@ function renderChannelStrips() {
       <div class="strip-char-name">${esc((ch.character || '').slice(0, 11))}</div>
       ${buildSignalSection(chNum)}
       <div class="strip-info">
-        <div class="strip-info-rf-bat">${rfMeter}${battMeter}</div>
+        <div class="strip-info-rf-bat">${rfBatHtml}</div>
         <div class="strip-info-badges">${badgesHtml}</div>
         <div class="strip-info-freq">${esc(freqShort)}</div>
       </div>
