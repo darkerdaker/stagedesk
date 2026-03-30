@@ -416,80 +416,61 @@
     flex-shrink: 0;
   }
 
-  /* ── ACTIVE CUE BILLBOARD ── */
+  /* ── ACTIVE CUE BILLBOARD ── (legacy classes kept for safety) */
   .active-billboard {
     background: var(--bg2);
     border-top: 1px solid var(--border);
-    padding: 8px 14px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 84px;
   }
-  .billboard-label {
+  .bill-label {
     font-family: var(--mono);
     font-size: 9px;
-    color: var(--text3);
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
-  .billboard-content {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .billboard-text { flex: 1; }
-  .billboard-char {
+  .bill-char-text {
     font-size: 10px;
     font-weight: 700;
-    color: var(--cyan);
     font-family: var(--mono);
-    margin-bottom: 3px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
+    margin-bottom: 2px;
   }
-  .billboard-line {
-    font-size: 20px;
+  .bill-line-text {
     font-weight: 500;
-    color: var(--text);
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .billboard-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    align-items: flex-end;
-  }
-  .next-btn {
-    height: 52px;
-    padding: 0 22px;
+  .go-btn {
+    width: 160px;
+    flex-shrink: 0;
     background: var(--amber);
     border: none;
     color: #000;
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     cursor: pointer;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    transition: opacity 0.1s;
-    white-space: nowrap;
-    user-select: none;
-    min-width: 130px;
     justify-content: center;
+    gap: 4px;
+    transition: opacity 0.1s;
+    user-select: none;
   }
-  .next-btn:hover { background: #c4700a; }
-  .next-btn:active { opacity: 0.85; }
-  .next-btn .arrow { font-size: 14px; }
-  .next-label {
-    font-size: 9px;
-    color: var(--text3);
-    font-family: var(--mono);
-    text-align: right;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
+  .go-btn:hover { background: #c4700a; }
+  .go-btn:active { opacity: 0.85; }
+  .go-key { font-size: 9px; opacity: 0.55; font-weight: 400; letter-spacing: 0.08em; }
 
   /* ── MINI CHANNEL STRIP ── */
   .ch-strip {
@@ -1190,90 +1171,6 @@
   .mode-badge.edit { background: var(--cyan-bg); color: var(--cyan); border-color: var(--cyan); }
   .mode-badge.show { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
 
-  /* ── REDESIGNED BILLBOARD (two-panel) ── */
-  .active-billboard {
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-    display: flex;
-    align-items: stretch;
-    padding: 0;
-    min-height: 82px;
-  }
-  .bill-panel {
-    flex: 1;
-    padding: 8px 14px 8px 14px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 3px;
-    position: relative;
-    min-width: 0;
-    overflow: hidden;
-  }
-  .bill-panel.bill-next { border-left: 1px solid var(--border); opacity: 0.72; }
-  .bill-cue-num {
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    letter-spacing: 0.06em;
-  }
-  .bill-panel-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 1px;
-    padding-left: 32px;
-  }
-  .bill-panel.bill-active .bill-panel-label { color: var(--cyan); }
-  .bill-char {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--cyan);
-    font-family: var(--mono);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .bill-char.bill-char-next { color: var(--text2); }
-  .bill-line {
-    font-size: 20px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .bill-line.bill-line-next { font-size: 16px; color: var(--text2); }
-  .go-btn {
-    width: 160px;
-    flex-shrink: 0;
-    background: var(--amber);
-    border: none;
-    color: #000;
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: opacity 0.1s;
-    user-select: none;
-  }
-  .go-btn:hover { background: #c4700a; }
-  .go-btn:active { opacity: 0.85; }
-  .go-key { font-size: 9px; opacity: 0.55; font-weight: 400; letter-spacing: 0.08em; }
-
   /* ── VIEW TOGGLE ── */
   .view-toggle-btn {
     font-family: var(--mono);
@@ -1303,6 +1200,20 @@
   .strips-container::-webkit-scrollbar { height: 4px; }
   .strips-container::-webkit-scrollbar-thumb { background: var(--border2); }
   .strips-container::-webkit-scrollbar-track { background: transparent; }
+  .strips-scroll-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    text-align: center;
+    padding: 3px 0;
+    letter-spacing: 0.12em;
+    flex-shrink: 0;
+    background: var(--bg1);
+    border-top: 1px solid var(--border);
+    transition: opacity 0.3s;
+    user-select: none;
+  }
+  .strips-scroll-hint.hidden { opacity: 0; pointer-events: none; }
   .console-strip {
     width: 88px;
     flex-shrink: 0;
@@ -1534,20 +1445,23 @@
 
       <!-- ACTIVE CUE BILLBOARD (two-panel) -->
       <div class="active-billboard">
-        <div class="bill-panel bill-active">
-          <div class="bill-cue-num" id="billActiveCueNum"></div>
-          <div class="bill-panel-label">&#9654; ACTIVE CUE</div>
-          <div class="bill-char" id="billChar">—</div>
-          <div class="bill-line" id="billLine">No cue selected. Add cues below or import a script.</div>
+        <!-- ACTIVE panel -->
+        <div style="flex:1;min-width:0;padding:10px 14px;border-right:1px solid var(--border);position:relative;display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden;">
+          <div id="billActiveCueNum" style="position:absolute;top:5px;left:10px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.06em;"></div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--cyan);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:2px;padding-left:36px;">&#9654; ACTIVE CUE</div>
+          <div id="billChar" style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cyan);letter-spacing:0.12em;text-transform:uppercase;">—</div>
+          <div id="billLine" style="font-size:20px;font-weight:500;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No cue selected. Add cues below or import a script.</div>
           <div id="billAction"></div>
         </div>
-        <div class="bill-panel bill-next">
-          <div class="bill-cue-num" id="billNextCueNum"></div>
-          <div class="bill-panel-label">NEXT</div>
-          <div class="bill-char bill-char-next" id="billNextChar">—</div>
-          <div class="bill-line bill-line-next" id="billNextLine">—</div>
+        <!-- NEXT panel -->
+        <div style="flex:1;min-width:0;padding:10px 14px;border-right:1px solid var(--border);opacity:0.7;position:relative;display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden;">
+          <div id="billNextCueNum" style="position:absolute;top:5px;left:10px;font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.06em;"></div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:2px;padding-left:36px;">NEXT</div>
+          <div id="billNextChar" style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text2);letter-spacing:0.12em;text-transform:uppercase;">—</div>
+          <div id="billNextLine" style="font-size:16px;font-weight:500;color:var(--text2);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</div>
           <div id="billNextAction"></div>
         </div>
+        <!-- GO button -->
         <button class="go-btn" onclick="nextCue()">
           <span>GO &#9654;</span>
           <span class="go-key">SPACE</span>
@@ -1601,6 +1515,7 @@
         <div class="channels-grid" id="channelGrid"></div>
       </div>
       <div class="strips-container" id="channelStrips" style="display:none;"></div>
+      <div class="strips-scroll-hint hidden" id="stripsScrollHint">&#8592; scroll &#8594;</div>
     </div>
 
     <!-- ── PAGE: SCENE LIST ── -->
@@ -2284,12 +2199,33 @@ function renderChannelStrips() {
       <div class="strip-fader"><div class="strip-fader-track"></div><div class="strip-fader-cap"></div></div>
     </div>`;
   }).join('');
+  // Show scroll hint after render (needs layout to be complete)
+  requestAnimationFrame(updateStripsScrollHint);
 }
 
 function setChannelView(view) {
   state.channelView = view;
   renderChannels();
   save();
+}
+
+function updateStripsScrollHint() {
+  const container = document.getElementById('channelStrips');
+  const hint = document.getElementById('stripsScrollHint');
+  if (!container || !hint) return;
+  // Show hint if total strips width exceeds container visible width
+  const totalWidth = state.channels.length * 89; // 88px + 1px border
+  const visible = container.clientWidth;
+  if (totalWidth > visible) {
+    hint.classList.remove('hidden');
+    // Hide on first scroll
+    container.addEventListener('scroll', function hideHint() {
+      hint.classList.add('hidden');
+      container.removeEventListener('scroll', hideHint);
+    }, { once: true });
+  } else {
+    hint.classList.add('hidden');
+  }
 }
 
 function addChannel() {
@@ -2532,7 +2468,7 @@ function recallScene(i) {
   state.scenes.forEach((s, idx) => s.current = idx === i);
   renderScenes();
   const s = state.scenes[i];
-  sendOSC(`/scene/recall`, [parseInt(s.dmScene) || i + 1]);
+  sendOSC(`/scene/recall`, [{ type: 'i', value: parseInt(s.dmScene) || i + 1 }]);
   showToast(`Recalled: ${s.name}`, 'success');
   save();
 }
@@ -2623,29 +2559,32 @@ function sendConsoleAction(cue) {
   switch (cue.action) {
     case 'scene': {
       const path = '/scene/recall';
-      const args = [parseInt(cue.actionVal)];
+      const args = [{ type: 'i', value: parseInt(cue.actionVal) || 1 }];
       console.log('[CONSOLE ACTION] scene →', path, args);
       sendOSC(path, args);
       break;
     }
     case 'mute': {
-      const path = '/ch/' + cue.actionVal + '/mute';
-      console.log('[CONSOLE ACTION] mute →', path, [1]);
-      sendOSC(path, [1]);
+      const path = '/ch/' + String(cue.actionVal).padStart(2,'0') + '/mix/on';
+      const args = [{ type: 'i', value: 0 }];
+      console.log('[CONSOLE ACTION] mute →', path, args);
+      sendOSC(path, args);
       break;
     }
     case 'unmute': {
-      const path = '/ch/' + cue.actionVal + '/mute';
-      console.log('[CONSOLE ACTION] unmute →', path, [0]);
-      sendOSC(path, [0]);
+      const path = '/ch/' + String(cue.actionVal).padStart(2,'0') + '/mix/on';
+      const args = [{ type: 'i', value: 1 }];
+      console.log('[CONSOLE ACTION] unmute →', path, args);
+      sendOSC(path, args);
       break;
     }
     case 'fader': {
       const ch = (cue.actionVal || '').split('@')[0];
       const level = parseFloat((cue.actionVal || '').split('@')[1] || 0);
-      const path = '/ch/' + ch + '/fader';
-      console.log('[CONSOLE ACTION] fader →', path, [level]);
-      sendOSC(path, [level]);
+      const path = '/ch/' + String(ch).padStart(2,'0') + '/mix/fader';
+      const args = [{ type: 'f', value: level }];
+      console.log('[CONSOLE ACTION] fader →', path, args);
+      sendOSC(path, args);
       break;
     }
   }
