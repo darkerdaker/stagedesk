@@ -1222,11 +1222,9 @@
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.1s;
+    cursor: default;
     overflow: hidden;
   }
-  .console-strip:hover { background: rgba(255,255,255,0.03); }
   .strip-nameplate {
     padding: 4px 4px 4px;
     display: flex;
@@ -1237,7 +1235,10 @@
     min-height: 50px;
     justify-content: center;
     flex-shrink: 0;
+    cursor: pointer;
+    transition: filter 0.1s;
   }
+  .strip-nameplate:hover { filter: brightness(1.15); }
   .strip-nameplate.active  { background: #003318; }
   .strip-nameplate.swapped { background: #2a1e08; }
   .strip-nameplate.problem { background: #2a0800; }
@@ -1288,7 +1289,7 @@
   }
   /* ── FIXED INFO BOX — RF/BAT, badges, frequency ── */
   .strip-info {
-    height: 72px;
+    height: 88px;
     flex-shrink: 0;
     overflow: hidden;
     border-top: 1px solid var(--border);
@@ -1304,7 +1305,7 @@
     gap: 6px;
     justify-content: center;
     align-items: flex-end;
-    height: 16px;
+    height: 44px;
     flex-shrink: 0;
   }
   .strip-info-badges {
@@ -1354,7 +1355,10 @@
     color: var(--text2);
     letter-spacing: 0.04em;
     flex-shrink: 0;
+    cursor: pointer;
+    transition: background 0.1s;
   }
+  .strip-ch-num:hover { background: var(--bg2); }
   .console-strip.off { opacity: 0.35; }
   /* ── SIGNAL METER SECTION — fader position (left) + signal bars (right) ── */
   .strip-signal {
@@ -1368,11 +1372,15 @@
   }
 
   /* ── FADER COLUMN ── */
+  /* padding-top matches ssm-clip (4px) + ssm-col gap (2px) = 6px
+     so fader scale bottom-% aligns with meter scale bottom-% */
   .ssf-col {
     width: 36px;
     flex-shrink: 0;
     display: flex;
     position: relative;
+    padding-top: 6px;
+    box-sizing: border-box;
   }
   .ssf-scale {
     width: 16px;
@@ -2497,8 +2505,8 @@ function renderChannelStrips() {
     const fd = faderData[chNum];
     const isMuted = fd ? fd.on === false : null;
     const nameplateStyle = isMuted ? ' style="opacity:0.4"' : '';
-    return `<div class="console-strip${status === 'off' ? ' off' : ''}" data-ch="${chNum}" onclick="editChannel(${i})">
-      <div class="strip-nameplate ${status}"${nameplateStyle}>
+    return `<div class="console-strip${status === 'off' ? ' off' : ''}" data-ch="${chNum}">
+      <div class="strip-nameplate ${status}"${nameplateStyle} onclick="editChannel(${i})">
         <div class="strip-status-badge">${statusLabel}</div>
         <div class="strip-short-name">${esc(shortName)}</div>
       </div>
@@ -2509,7 +2517,7 @@ function renderChannelStrips() {
         <div class="strip-info-badges">${badgesHtml}</div>
         <div class="strip-info-freq">${esc(freqShort)}</div>
       </div>
-      <div class="strip-ch-num">CH ${chNum}</div>
+      <div class="strip-ch-num" onclick="editChannel(${i})">CH ${chNum}</div>
     </div>`;
   }).join('');
   // Show scroll hint after render (needs layout to be complete)
