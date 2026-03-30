@@ -234,10 +234,36 @@ const udpClient = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 // Pending OSC get requests — keyed by OSC path, resolved when DM7 replies
 const _pendingOSCGets = new Map();
 
+// Meter stream cache — updated ~20x/sec when DM7 subscription is active
+let meterCache = {};        // keyed by ch number 1-32: dB float (-90 to +10)
+let meterLastReceived = 0;  // Date.now() timestamp of last /meters/1 message
+
 udpClient.on('message', (msg) => {
   try {
     const packet = osc.readPacket(msg, {});
     if (!packet?.address) return;
+
+    // ── Meter stream data from DM7 ──────────────────────────────────────────
+    if (packet.address === '/meters/1') {
+      const args = packet.args || [];
+      if (args.length > 0) {
+        const blobArg = args[0];
+        const buf = Buffer.isBuffer(blobArg?.value) ? blobArg.value
+                  : Buffer.isBuffer(blobArg)         ? blobArg : null;
+        if (buf && buf.length >= 128) { // 32 channels × 4 bytes
+          const first = meterLastReceived === 0;
+          for (let i = 0; i < 32; i++) {
+            const raw = buf.readFloatLE(i * 4);
+            meterCache[i + 1] = Math.max(-90, Math.min(10, isNaN(raw) ? -90 : raw));
+          }
+          meterLastReceived = Date.now();
+          if (first) log('DM7', 'Meter stream active — receiving at 50ms intervals');
+        }
+      }
+      return;
+    }
+
+    // ── Pending OSC get replies ──────────────────────────────────────────────
     const pending = _pendingOSCGets.get(packet.address);
     if (pending) {
       clearTimeout(pending.timer);
@@ -700,6 +726,17 @@ app.post('/ai/parse-script', upload.single('script'), async (req, res) => {
   res.json({ status: 'ok', showData, mode: useVision ? 'vision' : 'text' });
 });
 
+// GET /dm7/meters — return cached meter levels from the active DM7 subscription.
+// Returns the latest ~50ms snapshot; streaming:true if data arrived in the last 500ms.
+app.get('/dm7/meters', (req, res) => {
+  const streaming = meterLastReceived > 0 && (Date.now() - meterLastReceived) < 500;
+  res.json({
+    channels:  meterCache,
+    timestamp: new Date().toISOString(),
+    streaming,
+  });
+});
+
 // GET /logs — return rolling in-memory log (last 50 entries, newest last)
 app.get('/logs', (req, res) => {
   res.json({ status: 'ok', logs: _logBuffer.slice() });
@@ -740,7 +777,7 @@ udpClient.bind(OSC_LISTEN_PORT, () => {
 app.listen(BRIDGE_PORT, () => {
   log('SERVER', `StageDesk OSC bridge listening on http://localhost:${BRIDGE_PORT}`);
   log('SERVER', `DM7 target: ${DM7_IP}:${DM7_OSC_PORT}  OSC listen port: ${OSC_LISTEN_PORT}`);
-  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /dm7/faders  GET /pushover/test  GET /logs  GET /restart  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
+  log('SERVER', 'Endpoints: GET /ping  GET /status  GET /ulxd  GET /dm7/faders  GET /dm7/meters  GET /pushover/test  GET /logs  GET /restart  POST /osc  POST /midi  POST /panic  POST /ai/parse-script');
   log('SERVER', `AI script import: ${ANTHROPIC_API_KEY ? 'enabled (vision+text)' : 'disabled (set ANTHROPIC_API_KEY in .env)'}`);
   log('SERVER', `Pushover: ${(PUSHOVER_TOKEN && PUSHOVER_GROUP) ? `enabled (warn≤${BATTERY_WARN_BARS} critical≤${BATTERY_CRITICAL_BARS})` : 'disabled (set PUSHOVER_TOKEN + PUSHOVER_GROUP in .env)'}`);
   if (ULXD_IPS.length > 0) {
@@ -748,6 +785,15 @@ app.listen(BRIDGE_PORT, () => {
   } else {
     log('SERVER', 'ULXD: no receivers configured (set ULXD_IPS in .env)');
   }
+
+  // Subscribe to DM7 input meter stream at 50ms refresh rate.
+  // DM7 sends /meters/1 back to our UDP listen port; data lands in the message handler above.
+  log('DM7', 'Subscribing to meter stream at 50ms...');
+  sendOSC('/subscribe', [
+    { type: 's', value: 'meters/1' },
+    { type: 'i', value: 50 },
+  ]);
+  log('DM7', 'Meter subscription sent — waiting for data');
 });
 
 process.on('exit', () => {

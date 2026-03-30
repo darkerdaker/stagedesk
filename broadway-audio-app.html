@@ -1332,79 +1332,166 @@
     letter-spacing: 0.04em;
     flex-shrink: 0;
   }
-  /* ── FADER POSITION METER (strips view) ── */
-  .strip-fader {
+  /* ── SIGNAL METER SECTION — fader position (left) + signal bars (right) ── */
+  .strip-signal {
     flex: 1;
-    min-height: 80px;
-    padding: 5px 8px 2px;
+    min-height: 120px;
     display: flex;
-    flex-direction: column;
     border-top: 1px solid var(--border);
+    padding: 4px 3px;
     gap: 2px;
-  }
-  .sfd-meter {
-    flex: 1;
-    background: var(--bg1);
-    border: 1px solid var(--border);
-    position: relative;
     overflow: hidden;
   }
-  .sfd-bar-bg {
-    position: absolute;
-    width: 8px;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg3);
+
+  /* ── FADER COLUMN ── */
+  .ssf-col {
+    width: 36px;
+    flex-shrink: 0;
+    display: flex;
+    position: relative;
   }
-  .sfd-fill {
-    position: absolute;
-    width: 8px;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: height 0.15s ease-out;
+  .ssf-scale {
+    width: 16px;
+    flex-shrink: 0;
+    position: relative;
   }
-  .sfd-cap {
+  .ssf-scale-lbl {
     position: absolute;
-    width: 14px;
-    height: 4px;
-    background: #c8ccd4;
-    left: 50%;
-    transform: translateX(-50%);
-    transition: bottom 0.15s ease-out;
-    z-index: 2;
-  }
-  .sfd-scale-label {
-    position: absolute;
-    right: 2px;
+    right: 1px;
     font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text2);
-    line-height: 1;
+    font-size: 7px;
+    color: var(--text3);
     transform: translateY(50%);
+    line-height: 1;
     pointer-events: none;
   }
-  .sfd-post {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    text-align: center;
-    letter-spacing: 0.06em;
-    flex-shrink: 0;
+  .ssf-track-area {
+    flex: 1;
+    position: relative;
   }
-  .sfd-post.muted { color: var(--red); }
-  .sfd-no-data {
+  .ssf-track {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    top: 0;
+    bottom: 0;
+    background: var(--bg3);
+  }
+  .ssf-tick {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 1px;
+    background: var(--border2);
+    pointer-events: none;
+  }
+  .ssf-cap {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 10px;
+    background: linear-gradient(to bottom, #5a5f6a, #3a3f4a);
+    border: 1px solid var(--border2);
+    z-index: 2;
+    transition: bottom 0.1s ease-out;
+  }
+  .ssf-grip {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 1px;
+    background: var(--text3);
+  }
+  .ssf-nodata {
     position: absolute;
     bottom: 2px;
     left: 0;
     right: 0;
     text-align: center;
     font-family: var(--mono);
-    font-size: 7px;
+    font-size: 6px;
     color: var(--red);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+  }
+
+  /* ── SIGNAL METER COLUMN ── */
+  .ssm-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .ssm-clip {
+    width: 12px;
+    height: 4px;
+    flex-shrink: 0;
+    background: var(--bg3);
+    transition: background 0.1s;
+  }
+  .ssm-clip.clipping { background: #cc2200; }
+  .ssm-main {
+    flex: 1;
+    display: flex;
+    gap: 2px;
+    min-height: 0;
+  }
+  /* Each signal bar: 5px wide, full height, multi-color zones */
+  .ssm-bar {
+    width: 5px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Dim background zones (no signal) — stacked bottom to top */
+  .ssm-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+      #003300 0%,   #003300 60%,      /* -60 to -18 dB */
+      #004400 60%,  #004400 68.57%,   /* -18 to -12 dB */
+      #333300 68.57%,#333300 81.43%,  /* -12 to  -3 dB */
+      #332200 81.43%,#332200 85.71%,  /*  -3 to   0 dB */
+      #330000 85.71%,#330000 100%     /*   0 to +10 dB */
+    );
+  }
+  /* Bright signal fill — clips from bottom up to current level */
+  .ssm-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0%;
+    background: linear-gradient(to top,
+      #00cc44 0%,   #00cc44 60%,      /* -60 to -18 dB  green */
+      #00ff66 60%,  #00ff66 68.57%,   /* -18 to -12 dB  bright green */
+      #cccc00 68.57%,#cccc00 81.43%,  /* -12 to  -3 dB  yellow */
+      #e8850a 81.43%,#e8850a 85.71%,  /*  -3 to   0 dB  orange */
+      #cc2200 85.71%,#cc2200 100%     /*   0 to +10 dB  red */
+    );
+    transition: height 0.05s ease-out;
+  }
+  .ssm-scale-col {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+  }
+  .ssm-scale-lbl {
+    position: absolute;
+    left: 1px;
+    font-family: var(--mono);
+    font-size: 7px;
+    color: var(--text3);
+    transform: translateY(50%);
+    line-height: 1;
+    pointer-events: none;
+    white-space: nowrap;
   }
 
   /* ── DCA/MUTE BADGES (grid cards) ── */
@@ -1843,6 +1930,13 @@
         <div class="field-label">Mute groups</div>
         <input class="field-input" id="chEditMuteGroups" placeholder="e.g. 1, 3" />
       </div>
+      <div class="field-row">
+        <div class="field-label">Channel type</div>
+        <div style="display:flex;gap:4px;">
+          <button id="chEditMono"   class="btn sm active" onclick="setChType('mono')">MONO</button>
+          <button id="chEditStereo" class="btn sm"        onclick="setChType('stereo')">STEREO</button>
+        </div>
+      </div>
       <div class="ch-edit-note">DCA and mute groups will be read from console automatically in show mode.</div>
     </div>
     <div class="modal-btn-block">
@@ -1937,6 +2031,7 @@ let state = {
   cues: [],
   activeCue: -1,
   channels: [],
+  meters: {},   // keyed by ch.num: dB float — updated from /dm7/meters at 50ms
   scenes: [],
   flow: [],
   connected: false,
@@ -1966,8 +2061,8 @@ function showPage(p) {
   if (mb) mb.classList.add('active');
   const leaving = currentPage;
   currentPage = p;
-  if (p === 'channels') { startULXDPoll(); renderChannels(); if ((state.channelView || 'grid') === 'strips') startFaderPoll(); }
-  else if (leaving === 'channels') { stopULXDPoll(); stopFaderPoll(); }
+  if (p === 'channels') { startULXDPoll(); renderChannels(); if ((state.channelView || 'grid') === 'strips') { startFaderPoll(); startMeterPoll(); } }
+  else if (leaving === 'channels') { stopULXDPoll(); stopFaderPoll(); stopMeterPoll(); }
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
   if (p === 'a2swap') renderA2Swap();
@@ -2212,60 +2307,87 @@ function renderChannels() {
   }).join('');
 }
 
-// dB label positions as % from bottom of meter (approximate X32/DM7 fader taper)
+// Fader scale — label positions as % from bottom (X32/DM7 log taper)
 const _FADER_SCALE = [
   { label: 'OVR', pct: 98 },
   { label: '0',   pct: 75 },
-  { label: '3',   pct: 70 },
   { label: '6',   pct: 65 },
-  { label: '9',   pct: 61 },
   { label: '12',  pct: 57 },
-  { label: '15',  pct: 53 },
   { label: '18',  pct: 50 },
-  { label: '24',  pct: 43 },
   { label: '30',  pct: 37 },
-  { label: '40',  pct: 28 },
-  { label: '50',  pct: 20 },
-  { label: '60',  pct: 12 },
+  { label: '∞',   pct: 0  },
 ];
 
-function buildFaderMeter(chNum) {
+// Meter scale — dB values and their % position from bottom
+// Linear mapping: pct = (db + 60) / 70 * 100
+const _METER_SCALE = [
+  { label: '0',   pct: 85.7 },
+  { label: '-6',  pct: 77.1 },
+  { label: '-12', pct: 68.6 },
+  { label: '-18', pct: 60.0 },
+  { label: '-30', pct: 42.9 },
+  { label: '-60', pct: 0.0  },
+];
+
+// Per-channel clip hold timestamps (ms) — clip indicator holds 2s after clip
+const clipHold = {};
+
+function dbToPct(db) {
+  if (db === null || db === undefined) return 0;
+  return Math.max(0, Math.min(100, (db + 60) / 70 * 100));
+}
+
+function buildSignalSection(chNum) {
   const fd = faderData[chNum];
   const hasData = fd !== undefined && fd.fader !== null;
   const faderVal = hasData ? fd.fader : 0;
-  const isMuted = fd ? fd.on === false : null;
+  const isMuted  = fd ? fd.on === false : false;
+  const faderPct = hasData ? (faderVal * 100).toFixed(1) : '0';
 
-  const fillPct = hasData ? (faderVal * 100).toFixed(1) : 0;
-  let fillColor;
-  if (isMuted)           fillColor = 'var(--red)';
-  else if (faderVal >= 0.90) fillColor = '#cc2200';
-  else if (faderVal >= 0.80) fillColor = '#e8850a';
-  else                       fillColor = '#00cc44';
+  const db = state.meters[chNum];
+  const meterPct = dbToPct(db).toFixed(1);
+  const isClipping = db !== undefined && db !== null && db >= 0;
+  if (isClipping) clipHold[chNum] = Date.now();
+  const clipActive = clipHold[chNum] && (Date.now() - clipHold[chNum]) < 2000;
 
-  const scaleHtml = _FADER_SCALE.map(s =>
-    `<div class="sfd-scale-label" style="bottom:${s.pct}%">${s.label}</div>`
+  const faderScaleHtml = _FADER_SCALE.map(s =>
+    `<div class="ssf-scale-lbl" style="bottom:${s.pct}%">${s.label}</div>`
   ).join('');
 
-  const noDataHtml = (fd !== undefined && !hasData)
-    ? '<div class="sfd-no-data">NO DATA</div>' : '';
+  const faderTicksHtml = _FADER_SCALE.map(s =>
+    `<div class="ssf-tick" style="bottom:${s.pct}%"></div>`
+  ).join('');
 
-  let postLabel = '';
-  let postClass = '';
-  if (fd !== undefined) {
-    if (isMuted) { postLabel = 'MUTED'; postClass = ' muted'; }
-    else if (fd.on === true) postLabel = 'POST ON';
-  }
+  const meterScaleHtml = _METER_SCALE.map(s =>
+    `<div class="ssm-scale-lbl" style="bottom:${s.pct}%">${s.label}</div>`
+  ).join('');
 
-  return `<div class="strip-fader">
-      <div class="sfd-meter">
-        <div class="sfd-bar-bg"></div>
-        <div class="sfd-fill" style="height:${fillPct}%;background:${fillColor}"></div>
-        <div class="sfd-cap" style="bottom:calc(${fillPct}% - 2px)"></div>
-        ${scaleHtml}
+  const noDataHtml = fd !== undefined && !hasData
+    ? '<div class="ssf-nodata">NO DATA</div>' : '';
+
+  return `<div class="strip-signal">
+    <div class="ssf-col">
+      <div class="ssf-scale">${faderScaleHtml}</div>
+      <div class="ssf-track-area">
+        <div class="ssf-track"></div>
+        ${faderTicksHtml}
+        <div class="ssf-cap" style="bottom:calc(${faderPct}% - 5px)">
+          <div class="ssf-grip" style="top:2px"></div>
+          <div class="ssf-grip" style="top:5px"></div>
+          <div class="ssf-grip" style="top:8px"></div>
+        </div>
         ${noDataHtml}
       </div>
-      <div class="sfd-post${postClass}">${postLabel}</div>
-    </div>`;
+    </div>
+    <div class="ssm-col">
+      <div class="ssm-clip${clipActive ? ' clipping' : ''}"></div>
+      <div class="ssm-main">
+        <div class="ssm-bar"><div class="ssm-fill" style="height:${meterPct}%"></div></div>
+        <div class="ssm-bar"><div class="ssm-fill" style="height:${meterPct}%"></div></div>
+        <div class="ssm-scale-col">${meterScaleHtml}</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderChannelStrips() {
@@ -2315,7 +2437,7 @@ function renderChannelStrips() {
         <div class="strip-short-name">${esc(shortName)}</div>
       </div>
       <div class="strip-char-name">${esc((ch.character || '').slice(0, 11))}</div>
-      ${buildFaderMeter(chNum)}
+      ${buildSignalSection(chNum)}
       <div class="strip-meters">${rfMeter}${battMeter}</div>
       ${groupsHtml}
       <div class="strip-freq">${esc(freqShort)}</div>
@@ -2329,8 +2451,8 @@ function renderChannelStrips() {
 function setChannelView(view) {
   state.channelView = view;
   renderChannels();
-  if (view === 'strips') startFaderPoll();
-  else stopFaderPoll();
+  if (view === 'strips') { startFaderPoll(); startMeterPoll(); }
+  else { stopFaderPoll(); stopMeterPoll(); }
   save();
 }
 
@@ -2366,6 +2488,7 @@ function addChannel() {
   document.getElementById('chEditStatus').value = 'active';
   document.getElementById('chEditMuteGroups').value = '';
   document.getElementById('chEditDcaGroups').value = '';
+  setChType('mono');
   const delBtn = document.getElementById('chDeleteBtn');
   delBtn.textContent = 'DELETE CHANNEL';
   delBtn.dataset.confirming = '';
@@ -2378,6 +2501,13 @@ function nextChannelNum() {
 }
 
 let _editingChannelIdx = -1;
+let _chEditStereo      = false;
+
+function setChType(type) {
+  _chEditStereo = type === 'stereo';
+  document.getElementById('chEditMono').classList.toggle('active', !_chEditStereo);
+  document.getElementById('chEditStereo').classList.toggle('active', _chEditStereo);
+}
 
 function editChannel(i) {
   if (!requireEditMode()) return;
@@ -2393,6 +2523,7 @@ function editChannel(i) {
   document.getElementById('chEditStatus').value      = ch.status    || 'active';
   document.getElementById('chEditMuteGroups').value  = (ch.muteGroups || []).join(', ');
   document.getElementById('chEditDcaGroups').value   = (ch.dcaGroups  || []).join(', ');
+  setChType(ch.stereo ? 'stereo' : 'mono');
   const delBtn = document.getElementById('chDeleteBtn');
   delBtn.textContent = 'DELETE CHANNEL';
   delBtn.dataset.confirming = '';
@@ -2423,7 +2554,7 @@ function saveChannelEdit() {
 
   if (_editingChannelIdx < 0) {
     // New channel
-    state.channels.push({ num, actor, character: char, freq, packType: ptype, shortName: sname, status, muteGroups: mute, dcaGroups: dca });
+    state.channels.push({ num, actor, character: char, freq, packType: ptype, shortName: sname, status, muteGroups: mute, dcaGroups: dca, stereo: _chEditStereo });
     state.channels.sort((a, b) => (a.num||0) - (b.num||0));
     closeChannelEdit();
     renderChannels();
@@ -2442,6 +2573,7 @@ function saveChannelEdit() {
   ch.status    = status;
   ch.muteGroups = mute;
   ch.dcaGroups  = dca;
+  ch.stereo     = _chEditStereo;
   closeChannelEdit();
   renderChannels();
   renderStrip();
@@ -3314,11 +3446,15 @@ function applyLoadedState() {
   if (!state.channelView) state.channelView = 'grid';
   if (state.autoShowMode === undefined) state.autoShowMode = false;
   if (!state.autoShowMins) state.autoShowMins = 30;
+  if (!state.meters) state.meters = {};
 
   // Migrate cues without cueNumber
   state.cues.forEach((c, i) => {
     if (c.cueNumber === undefined || c.cueNumber === null) c.cueNumber = i + 1;
   });
+
+  // Migrate channels without stereo field
+  state.channels.forEach(ch => { if (ch.stereo === undefined) ch.stereo = false; });
 
   document.getElementById('showNameDisplay').textContent = state.show.name || 'No show loaded';
   document.getElementById('showNameInput').value = state.show.name || '';
@@ -3565,60 +3701,104 @@ function fetchFaders() {
     .then(r => r.json())
     .then(data => {
       if (!data.channels) return;
-      data.channels.forEach(c => {
-        faderData[c.ch] = { fader: c.fader, on: c.on };
-      });
+      data.channels.forEach(c => { faderData[c.ch] = { fader: c.fader, on: c.on }; });
       if (currentPage === 'channels' && (state.channelView || 'grid') === 'strips') {
-        data.channels.forEach(c => updateFaderMeterInPlace(c.ch));
+        requestAnimationFrame(updateAllStripsInPlace);
       }
     })
-    .catch(() => {}); // fail silently when bridge offline
-}
-
-function updateFaderMeterInPlace(chNum) {
-  const container = document.getElementById('channelStrips');
-  if (!container) return;
-  const strip = container.querySelector(`[data-ch="${chNum}"]`);
-  if (!strip) return;
-
-  const fd = faderData[chNum];
-  if (!fd) return;
-
-  const hasData = fd.fader !== null;
-  const faderVal = hasData ? fd.fader : 0;
-  const isMuted = fd.on === false;
-
-  const fillPct = hasData ? (faderVal * 100).toFixed(1) : 0;
-  let fillColor;
-  if (isMuted)               fillColor = 'var(--red)';
-  else if (faderVal >= 0.90) fillColor = '#cc2200';
-  else if (faderVal >= 0.80) fillColor = '#e8850a';
-  else                       fillColor = '#00cc44';
-
-  const fill = strip.querySelector('.sfd-fill');
-  const cap  = strip.querySelector('.sfd-cap');
-  const post = strip.querySelector('.sfd-post');
-  const nameplate = strip.querySelector('.strip-nameplate');
-  const noData = strip.querySelector('.sfd-no-data');
-
-  if (fill) { fill.style.height = `${fillPct}%`; fill.style.background = fillColor; }
-  if (cap)  cap.style.bottom = `calc(${fillPct}% - 2px)`;
-  if (post) {
-    post.textContent = isMuted ? 'MUTED' : (fd.on === true ? 'POST ON' : '');
-    post.className = 'sfd-post' + (isMuted ? ' muted' : '');
-  }
-  if (nameplate) nameplate.style.opacity = isMuted ? '0.4' : '';
-  if (noData) noData.style.display = hasData ? 'none' : '';
+    .catch(() => {});
 }
 
 function startFaderPoll() {
-  fetchFaders(); // fire immediately on strips view open
+  fetchFaders();
   if (_faderPollTimer) return;
   _faderPollTimer = setInterval(fetchFaders, 2000);
 }
 
 function stopFaderPoll() {
   if (_faderPollTimer) { clearInterval(_faderPollTimer); _faderPollTimer = null; }
+}
+
+// ── SIGNAL METERS (50ms, reads bridge cache) ──
+
+let _meterPollTimer   = null;
+let _metersLastUpdate = 0;
+
+function fetchMeters() {
+  const bridgeHost = state.console.ip || 'localhost';
+  fetch(`http://${bridgeHost}:3000/dm7/meters`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.channels) {
+        Object.entries(data.channels).forEach(([ch, db]) => {
+          state.meters[parseInt(ch, 10)] = db;
+        });
+        _metersLastUpdate = Date.now();
+      }
+      if (currentPage === 'channels' && (state.channelView || 'grid') === 'strips') {
+        requestAnimationFrame(updateAllStripsInPlace);
+      }
+    })
+    .catch(() => {});
+}
+
+function startMeterPoll() {
+  fetchMeters();
+  if (_meterPollTimer) return;
+  _meterPollTimer = setInterval(fetchMeters, 50);
+}
+
+function stopMeterPoll() {
+  if (_meterPollTimer) { clearInterval(_meterPollTimer); _meterPollTimer = null; }
+}
+
+// ── IN-PLACE STRIP UPDATE (called from RAF) ──
+
+function updateStripInPlace(chNum) {
+  const container = document.getElementById('channelStrips');
+  if (!container) return;
+  const strip = container.querySelector(`[data-ch="${chNum}"]`);
+  if (!strip) return;
+
+  const fd = faderData[chNum];
+  const db = state.meters[chNum];
+  const stale = _metersLastUpdate > 0 && (Date.now() - _metersLastUpdate) > 500;
+
+  // Fader cap + mute dim
+  if (fd !== undefined) {
+    const hasData  = fd.fader !== null;
+    const faderPct = hasData ? (fd.fader * 100).toFixed(1) : '0';
+    const isMuted  = fd.on === false;
+
+    const cap = strip.querySelector('.ssf-cap');
+    if (cap) cap.style.bottom = `calc(${faderPct}% - 5px)`;
+
+    const nameplate = strip.querySelector('.strip-nameplate');
+    if (nameplate) nameplate.style.opacity = isMuted ? '0.4' : '';
+
+    const noData = strip.querySelector('.ssf-nodata');
+    if (noData) noData.style.display = hasData ? 'none' : '';
+  }
+
+  // Signal meter fills + stale fade
+  const meterPct = dbToPct(db).toFixed(1);
+  const fills = strip.querySelectorAll('.ssm-fill');
+  fills.forEach(f => {
+    f.style.height  = `${meterPct}%`;
+    f.style.opacity = stale ? '0.3' : '';
+  });
+
+  // Clip indicator with 2-second hold
+  const isClipping = db !== undefined && db !== null && db >= 0;
+  if (isClipping) clipHold[chNum] = Date.now();
+  const clipActive = clipHold[chNum] && (Date.now() - clipHold[chNum]) < 2000;
+  const clipEl = strip.querySelector('.ssm-clip');
+  if (clipEl) clipEl.classList.toggle('clipping', !!clipActive);
+}
+
+function updateAllStripsInPlace() {
+  if (currentPage !== 'channels' || (state.channelView || 'grid') !== 'strips') return;
+  state.channels.forEach(ch => updateStripInPlace(ch.num || 0));
 }
 
 // ── helpers for card telemetry rendering ──
