@@ -1322,7 +1322,7 @@
   }
   /* ── FIXED INFO BOX — RF/BAT, badges, frequency ── */
   .strip-info {
-    height: 96px;
+    height: 80px;
     flex-shrink: 0;
     overflow: hidden;
     border-top: 1px solid var(--border);
@@ -1347,37 +1347,6 @@
     flex-direction: column;
     gap: 0;
   }
-  .strip-hbar-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    line-height: 1;
-    margin-bottom: 2px;
-    letter-spacing: 0.04em;
-  }
-  .strip-hbar-row {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .strip-hbar-seg {
-    height: 7px;
-    width: 100%;
-    background: var(--bg3);
-    flex-shrink: 0;
-    transition: background 0.2s;
-  }
-  .strip-hbar-seg.lit-green { background: var(--green); }
-  .strip-hbar-seg.lit-amber { background: var(--amber); }
-  .strip-hbar-seg.lit-red   { background: var(--red); }
-  .strip-info-badges {
-    display: flex;
-    gap: 2px;
-    align-items: center;
-    height: 20px;
-    flex-shrink: 0;
-    overflow: hidden;
-  }
   .strip-info-freq {
     font-family: var(--mono);
     font-size: 9px;
@@ -1390,12 +1359,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .strip-group-label { font-family: var(--mono); font-size: 7px; font-weight: 700; letter-spacing: 0.04em; margin-right: 1px; }
-  .strip-group-badge { font-family: var(--mono); font-size: 7px; font-weight: 700; padding: 0px 2px; border: 1px solid; }
-  .strip-dca-label  { color: var(--amber); }
-  .strip-dca-badge  { color: var(--amber); border-color: var(--amber); }
-  .strip-mut-label  { color: var(--red); }
-  .strip-mut-badge  { color: var(--red); border-color: var(--red); }
   .strip-ch-num {
     background: var(--bg1);
     border-top: 1px solid var(--border);
@@ -2598,17 +2561,6 @@ function renderChannelStrips() {
     }
     const rfBatHtml = `<div class="strip-bat-half"><div class="strip-hbar-label">BAT</div><div class="strip-hbar-row">${battSegs}</div></div><div class="strip-rf-half"><div class="strip-hbar-label">RF</div><div class="strip-hbar-row">${rfSegs}</div></div>`;
 
-    // Group badges — cap at 2 each, show +N for overflow
-    const dca  = ch.dcaGroups  || [];
-    const mute = ch.muteGroups || [];
-    const dcaBadges = dca.slice(0,2).map(g=>`<span class="strip-group-badge strip-dca-badge">${esc(g)}</span>`).join('');
-    const dcaMore   = dca.length > 2 ? `<span style="font-family:var(--mono);font-size:7px;color:var(--text3)">+${dca.length-2}</span>` : '';
-    const mutBadges = mute.slice(0,2).map(g=>`<span class="strip-group-badge strip-mut-badge">${esc(g)}</span>`).join('');
-    const mutMore   = mute.length > 2 ? `<span style="font-family:var(--mono);font-size:7px;color:var(--text3)">+${mute.length-2}</span>` : '';
-    let badgesHtml = '';
-    if (dca.length > 0)  badgesHtml += `<span class="strip-group-label strip-dca-label">DCA</span>${dcaBadges}${dcaMore}`;
-    if (mute.length > 0) badgesHtml += `<span class="strip-group-label strip-mut-label">MUT</span>${mutBadges}${mutMore}`;
-
     const freqShort = (ch.freq || '').replace(' MHz','').replace('MHz','');
     const chNum = ch.num || (i+1);
     const fd = faderData[chNum];
@@ -2623,7 +2575,6 @@ function renderChannelStrips() {
       ${buildSignalSection(chNum)}
       <div class="strip-info">
         <div class="strip-info-rf-bat">${rfBatHtml}</div>
-        <div class="strip-info-badges">${badgesHtml}</div>
         <div class="strip-info-freq">${esc(freqShort)}</div>
       </div>
       <div class="strip-ch-num" onclick="editChannel(${i})">CH ${chNum}</div>
