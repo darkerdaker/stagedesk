@@ -2127,6 +2127,7 @@ let state = {
   flow: [],
   connected: false,
 };
+let gridGroupFilter = new Set();   // active group filter keys for channel grid
 
 // ── PERSISTENCE ──
 function save() {
@@ -2153,7 +2154,7 @@ function showPage(p) {
   const leaving = currentPage;
   currentPage = p;
   if (p === 'channels') { startULXDPoll(); renderChannels(); if ((state.channelView || 'grid') === 'strips') { startFaderPoll(); startMeterPoll(); } }
-  else if (leaving === 'channels') { stopULXDPoll(); stopFaderPoll(); stopMeterPoll(); }
+  else if (leaving === 'channels') { stopULXDPoll(); stopFaderPoll(); stopMeterPoll(); gridGroupFilter.clear(); }
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
   if (p === 'a2swap') renderA2Swap();
@@ -2358,6 +2359,42 @@ function renderStrip() {
 }
 
 // ── CHANNEL LAYOUT ──
+function renderGroupFilters() {
+  const row = document.getElementById('groupFilterRow');
+  if (!row) return;
+  const dcaGroups  = new Set();
+  const muteGroups = new Set();
+  state.channels.forEach(ch => {
+    (ch.dcaGroups  || []).forEach(g => dcaGroups.add(String(g)));
+    (ch.muteGroups || []).forEach(g => muteGroups.add(String(g)));
+  });
+  if (dcaGroups.size === 0 && muteGroups.size === 0) {
+    row.style.display = 'none';
+    row.innerHTML = '';
+    return;
+  }
+  row.style.display = 'flex';
+  const btns = [];
+  [...dcaGroups].sort().forEach(g => {
+    const key = 'dca:' + g;
+    const active = gridGroupFilter.has(key);
+    btns.push(`<button class="group-filter-btn${active ? ' active-dca' : ''}" onclick="toggleGroupFilter('dca','${esc(g)}')" data-key="${key}">DCA ${esc(g)}</button>`);
+  });
+  [...muteGroups].sort().forEach(g => {
+    const key = 'mut:' + g;
+    const active = gridGroupFilter.has(key);
+    btns.push(`<button class="group-filter-btn${active ? ' active-mut' : ''}" onclick="toggleGroupFilter('mut','${esc(g)}')" data-key="${key}">MUT ${esc(g)}</button>`);
+  });
+  row.innerHTML = btns.join('');
+}
+
+function toggleGroupFilter(type, group) {
+  const key = type + ':' + group;
+  if (gridGroupFilter.has(key)) gridGroupFilter.delete(key);
+  else gridGroupFilter.add(key);
+  renderChannels();
+}
+
 function renderChannels() {
   renderStrip();
   const view = state.channelView || 'grid';
@@ -2368,12 +2405,24 @@ function renderChannels() {
 
   if (view === 'strips') { renderChannelStrips(); return; }
 
+  renderGroupFilters();
   const grid = document.getElementById('channelGrid');
   if (state.channels.length === 0) {
     grid.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px;grid-column:1/-1;">No channels. Add channels or load demo show from Settings.</div>';
     return;
   }
-  grid.innerHTML = state.channels.map((ch, i) => {
+  const filteredChannels = gridGroupFilter.size === 0
+    ? state.channels
+    : state.channels.filter(ch =>
+        (ch.dcaGroups  || []).some(g => gridGroupFilter.has('dca:' + g)) ||
+        (ch.muteGroups || []).some(g => gridGroupFilter.has('mut:' + g))
+      );
+  if (filteredChannels.length === 0) {
+    grid.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px;grid-column:1/-1;">No channels match the selected filters.</div>';
+    return;
+  }
+  grid.innerHTML = filteredChannels.map((ch) => {
+    const i_orig = state.channels.indexOf(ch);
     const statusClass = ch.status || 'active';
     const dca  = ch.dcaGroups  || [];
     const mute = ch.muteGroups || [];
@@ -2384,16 +2433,16 @@ function renderChannels() {
       mute.forEach(g => { groupsHtml += `<span class="ch-group-badge ch-mut-badge">MUT ${esc(g)}</span>`; });
       groupsHtml += '</div>';
     }
-    return `<div class="channel-card ${statusClass}" onclick="editChannel(${i})">
+    return `<div class="channel-card ${statusClass}" onclick="editChannel(${i_orig})">
       <div class="ch-row">
-        <div class="ch-num">CH${ch.num || (i+1)}</div>
+        <div class="ch-num">CH${ch.num || (i_orig+1)}</div>
         <div class="ch-status ${statusClass}"></div>
       </div>
       <div class="ch-actor">${esc(ch.actor || 'Unassigned')}</div>
       <div class="ch-char">${esc(ch.character || '—')}</div>
       <div class="ch-freq">${esc(ch.freq || '')}</div>
       ${groupsHtml}
-      ${cardTelemetry(ch.num || (i+1), ch.freq)}
+      ${cardTelemetry(ch.num || (i_orig+1), ch.freq)}
     </div>`;
   }).join('');
 }
