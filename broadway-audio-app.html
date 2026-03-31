@@ -1320,7 +1320,7 @@
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
-  /* ── FIXED INFO BOX — RF/BAT, badges, frequency ── */
+  /* ── FIXED INFO BOX — battery icon + RF dots, frequency ── */
   .strip-info {
     height: 80px;
     flex-shrink: 0;
@@ -1336,17 +1336,74 @@
   .strip-info-rf-bat {
     display: flex;
     gap: 4px;
-    align-items: flex-start;
-    height: 54px;
+    align-items: center;
+    flex: 1;
     flex-shrink: 0;
+    min-height: 0;
   }
-  .strip-bat-half, .strip-rf-half {
+  .strip-bat-half {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .strip-rf-half {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
   }
+  .strip-batt-icon {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .strip-batt-body {
+    flex: 1;
+    min-width: 0;
+    height: 12px;
+    border: 1px solid var(--border2);
+    background: var(--bg1);
+    display: flex;
+    gap: 1px;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+  .strip-batt-nub {
+    width: 3px;
+    height: 6px;
+    background: var(--border2);
+    flex-shrink: 0;
+  }
+  .strip-batt-seg {
+    flex: 1;
+    background: var(--bg3);
+    transition: background 0.2s;
+  }
+  .strip-rf-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .strip-rf-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .strip-rf-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bg3);
+    transition: background 0.2s;
+  }
+  .strip-rf-dot.lit { background: #e8850a; }
   .strip-info-freq {
     font-family: var(--mono);
     font-size: 9px;
@@ -2543,23 +2600,22 @@ function renderChannelStrips() {
     const batt = t ? t.batt_bars : null;
     const rf   = t ? t.rf_level  : null;
 
-    // RF indicator — 3 horizontal segs, fill from bottom
-    const rfLevel = rf !== null ? (rf > 60 ? 3 : rf > 30 ? 2 : 1) : 0;
-    const rfCls   = rfLevel === 3 ? 'lit-green' : rfLevel === 2 ? 'lit-amber' : 'lit-red';
-    let rfSegs = '';
-    for (let i = 1; i <= 3; i++) {
-      const lit = rfLevel > 0 && rfLevel >= (4 - i);
-      rfSegs += `<div class="strip-hbar-seg${lit ? ' '+rfCls : ''}"></div>`;
-    }
-
-    // Battery indicator — 5 horizontal segs, fill from bottom
-    const battCls = batt !== null ? (batt >= 3 ? 'lit-green' : batt === 2 ? 'lit-amber' : 'lit-red') : '';
+    // Battery icon — 5 segments left-to-right, classic icon shape
+    const battColor = batt === null || batt === 0 ? '' : batt >= 3 ? '#00cc44' : batt === 2 ? '#e8850a' : '#cc2200';
     let battSegs = '';
-    for (let i = 1; i <= 5; i++) {
-      const lit = batt !== null && batt >= (6 - i);
-      battSegs += `<div class="strip-hbar-seg${lit ? ' '+battCls : ''}"></div>`;
+    for (let seg = 1; seg <= 5; seg++) {
+      const lit = batt !== null && batt >= seg;
+      battSegs += `<div class="strip-batt-seg"${lit && battColor ? ` style="background:${battColor}"` : ''}></div>`;
     }
-    const rfBatHtml = `<div class="strip-bat-half"><div class="strip-hbar-label">BAT</div><div class="strip-hbar-row">${battSegs}</div></div><div class="strip-rf-half"><div class="strip-hbar-label">RF</div><div class="strip-hbar-row">${rfSegs}</div></div>`;
+    const battHtml = `<div class="strip-batt-icon"><div class="strip-batt-body">${battSegs}</div><div class="strip-batt-nub"></div></div>`;
+
+    // RF dots — 5 stacked circles, all amber when lit, count mapped from dBm
+    const rfDots = rf === null ? 0 : rf > -70 ? 5 : rf > -80 ? 4 : rf > -85 ? 3 : rf > -90 ? 2 : 1;
+    let rfDotsHtml = '';
+    for (let dot = 0; dot < 5; dot++) {
+      rfDotsHtml += `<div class="strip-rf-dot${rf !== null && dot < rfDots ? ' lit' : ''}"></div>`;
+    }
+    const rfBatHtml = `<div class="strip-bat-half">${battHtml}</div><div class="strip-rf-half"><div class="strip-rf-label">RF</div><div class="strip-rf-col">${rfDotsHtml}</div></div>`;
 
     const freqShort = (ch.freq || '').replace(' MHz','').replace('MHz','');
     const chNum = ch.num || (i+1);
