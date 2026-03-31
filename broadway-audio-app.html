@@ -3937,9 +3937,9 @@ function cardTelemetry(chNum, plotFreq) {
 
   let rfHtml = '';
   if (t.rf_level !== null) {
-    // RX_RF_LVL: Shure returns 0–100 integer
+    // RX_RF_LVL: Shure returns dBm as signed integer (e.g. -70 = -70 dBm)
     const rf     = t.rf_level;
-    const level  = rf > 60 ? 3 : rf > 30 ? 2 : 1;
+    const level  = rf > -70 ? 3 : rf > -80 ? 2 : 1;
     const color  = level === 3 ? 'var(--green)' : level === 2 ? 'var(--amber)' : 'var(--red)';
     rfHtml = '<div class="ch-rf">';
     for (let i = 1; i <= 3; i++) {
