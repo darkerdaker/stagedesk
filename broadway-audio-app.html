@@ -534,6 +534,39 @@
     flex-shrink: 0;
     flex-wrap: wrap;
   }
+  #groupFilterRow {
+    flex-basis: 100%;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  #groupFilterRow::-webkit-scrollbar { display: none; }
+  .group-filter-btn {
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.1s, color 0.1s;
+  }
+  .group-filter-btn.active-dca {
+    background: var(--cyan);
+    color: #000;
+    border-color: var(--cyan);
+  }
+  .group-filter-btn.active-mut {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
   .page-title {
     font-family: var(--mono);
     font-size: 10px;
@@ -1717,6 +1750,7 @@
           </div>
           <button class="btn sm" id="addChannelBtn" onclick="addChannel()">+ Add channel</button>
         </div>
+        <div id="groupFilterRow" style="display:none;"></div>
       </div>
       <div class="channels-body" id="channelGridBody">
         <div class="channels-grid" id="channelGrid"></div>
