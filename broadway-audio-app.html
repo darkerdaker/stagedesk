@@ -1352,31 +1352,32 @@
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
   }
-  .strip-batt-icon {
+  .strip-batt-wrap {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
+    gap: 0;
+  }
+  .strip-batt-nub {
+    width: 6px;
+    height: 4px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    flex-shrink: 0;
   }
   .strip-batt-body {
-    flex: 1;
-    min-width: 0;
-    height: 12px;
+    width: 12px;
+    height: 40px;
     border: 1px solid var(--border2);
     background: var(--bg1);
     display: flex;
-    gap: 1px;
+    flex-direction: column-reverse;
+    gap: 2px;
     padding: 2px;
     box-sizing: border-box;
-  }
-  .strip-batt-nub {
-    width: 3px;
-    height: 6px;
-    background: var(--border2);
     flex-shrink: 0;
   }
   .strip-batt-seg {
@@ -1384,21 +1385,14 @@
     background: var(--bg3);
     transition: background 0.2s;
   }
-  .strip-rf-label {
-    font-family: var(--mono);
-    font-size: 8px;
-    color: var(--text3);
-    line-height: 1;
-    letter-spacing: 0.04em;
-  }
   .strip-rf-col {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
   }
   .strip-rf-dot {
-    width: 6px;
-    height: 6px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--bg3);
     transition: background 0.2s;
@@ -1519,8 +1513,8 @@
     right: 0;
     text-align: center;
     font-family: var(--mono);
-    font-size: 6px;
-    color: var(--red);
+    font-size: 8px;
+    color: var(--text3);
     letter-spacing: 0.04em;
     pointer-events: none;
   }
@@ -1770,9 +1764,9 @@
           </div>
           <button class="btn sm" id="addChannelBtn" onclick="addChannel()">+ Add channel</button>
         </div>
-        <div id="groupFilterRow" style="display:none;"></div>
       </div>
       <div class="channels-body" id="channelGridBody">
+        <div id="groupFilterRow" style="display:none;"></div>
         <div class="channels-grid" id="channelGrid"></div>
       </div>
       <div class="strips-container" id="channelStrips" style="display:none;"></div>
@@ -2600,14 +2594,14 @@ function renderChannelStrips() {
     const batt = t ? t.batt_bars : null;
     const rf   = t ? t.rf_level  : null;
 
-    // Battery icon — 5 segments left-to-right, classic icon shape
+    // Battery icon — vertical, 5 segments fill bottom-to-top
     const battColor = batt === null || batt === 0 ? '' : batt >= 3 ? '#00cc44' : batt === 2 ? '#e8850a' : '#cc2200';
     let battSegs = '';
     for (let seg = 1; seg <= 5; seg++) {
       const lit = batt !== null && batt >= seg;
       battSegs += `<div class="strip-batt-seg"${lit && battColor ? ` style="background:${battColor}"` : ''}></div>`;
     }
-    const battHtml = `<div class="strip-batt-icon"><div class="strip-batt-body">${battSegs}</div><div class="strip-batt-nub"></div></div>`;
+    const battHtml = `<div class="strip-batt-wrap"><div class="strip-batt-nub"></div><div class="strip-batt-body">${battSegs}</div></div>`;
 
     // RF dots — 5 stacked circles, all amber when lit, count mapped from dBm
     const rfDots = rf === null ? 0 : rf > -70 ? 5 : rf > -80 ? 4 : rf > -85 ? 3 : rf > -90 ? 2 : 1;
@@ -2615,7 +2609,7 @@ function renderChannelStrips() {
     for (let dot = 0; dot < 5; dot++) {
       rfDotsHtml += `<div class="strip-rf-dot${rf !== null && dot < rfDots ? ' lit' : ''}"></div>`;
     }
-    const rfBatHtml = `<div class="strip-bat-half">${battHtml}</div><div class="strip-rf-half"><div class="strip-rf-label">RF</div><div class="strip-rf-col">${rfDotsHtml}</div></div>`;
+    const rfBatHtml = `<div class="strip-bat-half">${battHtml}</div><div class="strip-rf-half"><div class="strip-rf-col">${rfDotsHtml}</div></div>`;
 
     const freqShort = (ch.freq || '').replace(' MHz','').replace('MHz','');
     const chNum = ch.num || (i+1);
