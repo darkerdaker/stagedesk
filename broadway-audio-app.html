@@ -1669,7 +1669,7 @@
       SWAP<div class="tooltip">A2 mic swaps</div>
     </div>
     <div class="sidebar-spacer"></div>
-    <div class="nav-btn" onclick="showPage('settings')" id="nav-settings">
+    <div class="nav-btn" onclick="toggleSettings()" id="nav-settings">
       SET<div class="tooltip">Settings & import</div>
     </div>
     <div class="panic-btn" onclick="openPanic()">
@@ -1966,7 +1966,7 @@
   <button class="mobile-nav-btn" id="mnav-scenes" onclick="showPage('scenes')">SCN</button>
   <button class="mobile-nav-btn" id="mnav-flow" onclick="showPage('flow')">FLOW</button>
   <button class="mobile-nav-btn" id="mnav-a2swap" onclick="showPage('a2swap')">SWAP</button>
-  <button class="mobile-nav-btn" id="mnav-settings" onclick="showPage('settings')">SET</button>
+  <button class="mobile-nav-btn" id="mnav-settings" onclick="toggleSettings()">SET</button>
 </div>
 
 <!-- PANIC MODAL -->
@@ -2158,6 +2158,11 @@ function load() {
 
 // ── NAV ──
 let currentPage = 'cues';
+let preSettingsPage = 'cues';
+function toggleSettings() {
+  if (currentPage === 'settings') showPage(preSettingsPage);
+  else { preSettingsPage = currentPage; showPage('settings'); }
+}
 function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
