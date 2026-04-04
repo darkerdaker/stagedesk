@@ -1656,8 +1656,11 @@
     <div class="nav-btn active" onclick="showPage('cues')" id="nav-cues">
       CUE<div class="tooltip">Script cues</div>
     </div>
-    <div class="nav-btn" onclick="showPage('channels')" id="nav-channels">
-      CH<div class="tooltip">Channel layout</div>
+    <div class="nav-btn" onclick="showPage('ch')" id="nav-ch">
+      CH<div class="tooltip">Channel grid</div>
+    </div>
+    <div class="nav-btn" onclick="showPage('mix')" id="nav-mix">
+      MIX<div class="tooltip">Channel strips</div>
     </div>
     <div class="nav-btn" onclick="showPage('scenes')" id="nav-scenes">
       SCN<div class="tooltip">Scene list</div>
@@ -1747,7 +1750,7 @@
     </div>
 
     <!-- ── PAGE: CHANNEL LAYOUT ── -->
-    <div class="page" id="page-channels">
+    <div class="page" id="page-ch">
       <div class="channels-header">
         <div class="page-title">Channel layout</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -1757,12 +1760,6 @@
             <span style="padding:1px 4px;border:1px solid var(--red);color:var(--red);background:var(--red-bg);">RF!</span>
             <span style="padding:1px 4px;border:1px solid var(--border);color:var(--text3);background:var(--bg3);">OFF</span>
           </span>
-          <span class="ulxd-badge offline" id="ulxdBadge">ULXD OFFLINE</span>
-          <span id="testModeBadge" style="display:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.07em;padding:2px 6px;border:1px solid var(--amber);color:var(--amber);background:var(--amber-bg);">TEST MODE</span>
-          <div style="display:flex;gap:0;">
-            <button class="view-toggle-btn active" id="viewBtnGrid" onclick="setChannelView('grid')">GRID</button>
-            <button class="view-toggle-btn" id="viewBtnStrips" onclick="setChannelView('strips')">STRIPS</button>
-          </div>
           <button class="btn sm" id="addChannelBtn" onclick="addChannel()">+ Add channel</button>
         </div>
       </div>
@@ -1770,7 +1767,18 @@
         <div id="groupFilterRow" style="display:none;"></div>
         <div class="channels-grid" id="channelGrid"></div>
       </div>
-      <div class="strips-container" id="channelStrips" style="display:none;"></div>
+    </div>
+
+    <!-- ── PAGE: MIX (CHANNEL STRIPS) ── -->
+    <div class="page" id="page-mix">
+      <div class="channels-header">
+        <div class="page-title">Mix</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="ulxd-badge offline" id="ulxdBadge">ULXD OFFLINE</span>
+          <span id="testModeBadge" style="display:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.07em;padding:2px 6px;border:1px solid var(--amber);color:var(--amber);background:var(--amber-bg);">TEST MODE</span>
+        </div>
+      </div>
+      <div class="strips-container" id="channelStrips"></div>
       <div class="strips-scroll-hint hidden" id="stripsScrollHint">&#8592; scroll &#8594;</div>
     </div>
 
@@ -1962,7 +1970,8 @@
 <!-- MOBILE NAV -->
 <div class="mobile-nav">
   <button class="mobile-nav-btn active" id="mnav-cues" onclick="showPage('cues')">CUE</button>
-  <button class="mobile-nav-btn" id="mnav-channels" onclick="showPage('channels')">CH</button>
+  <button class="mobile-nav-btn" id="mnav-ch" onclick="showPage('ch')">CH</button>
+  <button class="mobile-nav-btn" id="mnav-mix" onclick="showPage('mix')">MIX</button>
   <button class="mobile-nav-btn" id="mnav-scenes" onclick="showPage('scenes')">SCN</button>
   <button class="mobile-nav-btn" id="mnav-flow" onclick="showPage('flow')">FLOW</button>
   <button class="mobile-nav-btn" id="mnav-a2swap" onclick="showPage('a2swap')">SWAP</button>
@@ -2132,7 +2141,7 @@ let state = {
   console: { ip: '', port: '49280', proto: 'osc' },
   role: 'A1',
   mode: 'edit',
-  channelView: 'grid',
+
   autoShowMode: false,
   autoShowMins: 30,
   cues: [],
@@ -2174,8 +2183,12 @@ function showPage(p) {
   if (mb) mb.classList.add('active');
   const leaving = currentPage;
   currentPage = p;
-  if (p === 'channels') { startULXDPoll(); renderChannels(); if ((state.channelView || 'grid') === 'strips') { startFaderPoll(); startMeterPoll(); } }
-  else if (leaving === 'channels') { stopULXDPoll(); stopFaderPoll(); stopMeterPoll(); gridGroupFilter.clear(); }
+  const onCh = p === 'ch' || p === 'mix';
+  const wasCh = leaving === 'ch' || leaving === 'mix';
+  if (p === 'ch') { startULXDPoll(); renderChannels(); }
+  if (p === 'mix') { startULXDPoll(); startFaderPoll(); startMeterPoll(); renderChannelStrips(); }
+  if (leaving === 'mix' && p === 'ch') { stopFaderPoll(); stopMeterPoll(); }
+  if (wasCh && !onCh) { stopULXDPoll(); stopFaderPoll(); stopMeterPoll(); gridGroupFilter.clear(); }
   if (p === 'scenes') renderScenes();
   if (p === 'flow') renderFlow();
   if (p === 'a2swap') renderA2Swap();
@@ -2418,14 +2431,6 @@ function toggleGroupFilter(type, group) {
 
 function renderChannels() {
   renderStrip();
-  const view = state.channelView || 'grid';
-  document.getElementById('channelGridBody').style.display  = view === 'grid'   ? '' : 'none';
-  document.getElementById('channelStrips').style.display    = view === 'strips' ? 'flex' : 'none';
-  document.getElementById('viewBtnGrid').classList.toggle('active', view === 'grid');
-  document.getElementById('viewBtnStrips').classList.toggle('active', view === 'strips');
-
-  if (view === 'strips') { renderChannelStrips(); return; }
-
   renderGroupFilters();
   const grid = document.getElementById('channelGrid');
   if (state.channels.length === 0) {
@@ -2641,13 +2646,6 @@ function renderChannelStrips() {
   requestAnimationFrame(updateStripsScrollHint);
 }
 
-function setChannelView(view) {
-  state.channelView = view;
-  renderChannels();
-  if (view === 'strips') { startFaderPoll(); startMeterPoll(); }
-  else { stopFaderPoll(); stopMeterPoll(); }
-  save();
-}
 
 function updateStripsScrollHint() {
   const container = document.getElementById('channelStrips');
@@ -2750,7 +2748,7 @@ function saveChannelEdit() {
     state.channels.push({ num, actor, character: char, freq, packType: ptype, shortName: sname, status, muteGroups: mute, dcaGroups: dca, stereo: _chEditStereo });
     state.channels.sort((a, b) => (a.num||0) - (b.num||0));
     closeChannelEdit();
-    renderChannels();
+    if (currentPage === 'mix') renderChannelStrips(); else renderChannels();
     save();
     showToast(`CH${num} added`, 'success');
     return;
@@ -2768,7 +2766,7 @@ function saveChannelEdit() {
   ch.dcaGroups  = dca;
   ch.stereo     = _chEditStereo;
   closeChannelEdit();
-  renderChannels();
+  if (currentPage === 'mix') renderChannelStrips(); else renderChannels();
   renderStrip();
   save();
   showToast(`CH${ch.num} saved`, 'success');
@@ -2781,7 +2779,7 @@ function deleteChannel() {
       const ch = state.channels[_editingChannelIdx];
       state.channels.splice(_editingChannelIdx, 1);
       closeChannelEdit();
-      renderChannels();
+      if (currentPage === 'mix') renderChannelStrips(); else renderChannels();
       save();
       showToast(`CH${ch.num} deleted`);
     }
@@ -3636,7 +3634,7 @@ function handleJSONImport(e) {
 function applyLoadedState() {
   // Ensure new state fields have defaults after loading old saves
   if (!state.mode) state.mode = 'edit';
-  if (!state.channelView) state.channelView = 'grid';
+
   if (state.autoShowMode === undefined) state.autoShowMode = false;
   if (!state.autoShowMins) state.autoShowMins = 30;
   if (!state.meters) state.meters = {};
@@ -3673,7 +3671,8 @@ function applyLoadedState() {
   applyModeLocks();
   renderCues();
   renderStrip();
-  if (currentPage === 'channels') renderChannels();
+  if (currentPage === 'ch') renderChannels();
+  else if (currentPage === 'mix') renderChannelStrips();
   if (currentPage === 'scenes') renderScenes();
   if (currentPage === 'flow') renderFlow();
   if (currentPage === 'a2swap') renderA2Swap();
@@ -3693,7 +3692,7 @@ function cycleIndicatorTest() {
   if (badge) badge.style.display = indicatorTestState > 0 ? 'inline' : 'none';
   const btn = document.getElementById('testIndicatorsBtn');
   if (btn) btn.textContent = INDICATOR_TEST_LABELS[indicatorTestState];
-  if ((state.channelView || 'grid') === 'strips') renderChannelStrips();
+  if (currentPage === 'mix') renderChannelStrips();
 }
 
 // ── DEMO SHOW ──
@@ -3848,7 +3847,8 @@ function fetchULXD() {
       ulxdLastPoll = new Date();
       setULXDStatus('ok');
       checkBatteryAlerts();
-      if (currentPage === 'channels') renderChannels();
+      if (currentPage === 'ch') renderChannels();
+      else if (currentPage === 'mix') renderChannelStrips();
     })
     .catch(err => {
       console.warn('[ULXD] fetch error:', err.message);
@@ -3915,7 +3915,7 @@ function fetchFaders() {
     .then(data => {
       if (!data.channels) return;
       data.channels.forEach(c => { faderData[c.ch] = { fader: c.fader, on: c.on }; });
-      if (currentPage === 'channels' && (state.channelView || 'grid') === 'strips') {
+      if (currentPage === 'mix') {
         requestAnimationFrame(updateAllStripsInPlace);
       }
     })
@@ -3948,7 +3948,7 @@ function fetchMeters() {
         });
         _metersLastUpdate = Date.now();
       }
-      if (currentPage === 'channels' && (state.channelView || 'grid') === 'strips') {
+      if (currentPage === 'mix') {
         requestAnimationFrame(updateAllStripsInPlace);
       }
     })
@@ -4010,7 +4010,7 @@ function updateStripInPlace(chNum) {
 }
 
 function updateAllStripsInPlace() {
-  if (currentPage !== 'channels' || (state.channelView || 'grid') !== 'strips') return;
+  if (currentPage !== 'mix') return;
   state.channels.forEach(ch => updateStripInPlace(ch.num || 0));
 }
 
