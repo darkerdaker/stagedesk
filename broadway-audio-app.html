@@ -1758,6 +1758,7 @@
             <span style="padding:1px 4px;border:1px solid var(--border);color:var(--text3);background:var(--bg3);">OFF</span>
           </span>
           <span class="ulxd-badge offline" id="ulxdBadge">ULXD OFFLINE</span>
+          <span id="testModeBadge" style="display:none;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.07em;padding:2px 6px;border:1px solid var(--amber);color:var(--amber);background:var(--amber-bg);">TEST MODE</span>
           <div style="display:flex;gap:0;">
             <button class="view-toggle-btn active" id="viewBtnGrid" onclick="setChannelView('grid')">GRID</button>
             <button class="view-toggle-btn" id="viewBtnStrips" onclick="setChannelView('strips')">STRIPS</button>
@@ -1925,6 +1926,7 @@
               <button class="btn sm" onclick="importJSON()">↑ Import JSON</button>
               <button class="btn sm" onclick="loadDemo()" style="color:var(--amber);border-color:var(--amber);">★ Load demo show</button>
               <button class="btn sm" onclick="clearAll()" style="color:var(--red);border-color:var(--red);">✕ Clear all data</button>
+              <button class="btn sm" id="testIndicatorsBtn" onclick="cycleIndicatorTest()" style="color:var(--amber);border-color:var(--amber);">⊙ Test indicators</button>
             </div>
             <div style="font-size:11px;color:var(--text3);">All data is saved automatically to this browser. Export JSON for backup before each show.</div>
           </div>
@@ -2590,7 +2592,7 @@ function renderChannelStrips() {
     const status = ch.status || 'active';
     const statusLabel = { active:'LIVE', swapped:'SWAP', problem:'RF!', off:'OFF' }[status] || '';
     const shortName = (ch.shortName || (ch.actor || '').slice(0, 8) || ('CH' + (ch.num || i+1))).toUpperCase();
-    const t = ulxdData[ch.num || (i+1)];
+    const t = indicatorTestState > 0 ? INDICATOR_TEST_STATES[indicatorTestState] : ulxdData[ch.num || (i+1)];
     const batt = t ? t.batt_bars : null;
     const rf   = t ? t.rf_level  : null;
 
@@ -3680,6 +3682,15 @@ function clearAll() {
   save(); applyLoadedState(); showToast('All data cleared');
 }
 
+function cycleIndicatorTest() {
+  indicatorTestState = (indicatorTestState + 1) % INDICATOR_TEST_STATES.length;
+  const badge = document.getElementById('testModeBadge');
+  if (badge) badge.style.display = indicatorTestState > 0 ? 'inline' : 'none';
+  const btn = document.getElementById('testIndicatorsBtn');
+  if (btn) btn.textContent = INDICATOR_TEST_LABELS[indicatorTestState];
+  if ((state.channelView || 'grid') === 'strips') renderChannelStrips();
+}
+
 // ── DEMO SHOW ──
 function loadDemo() {
   state.show = { name: 'Into the Woods', venue: 'Main Stage' };
@@ -3780,6 +3791,17 @@ function executePanic() {
 // ── ULXD TELEMETRY ──
 let ulxdData = {};          // keyed by ch.num: { batt_bars, rf_level, frequency, chan_name }
 let ulxdLastPoll = null;
+let indicatorTestState = 0; // 0=off, 1–6=test; not persisted
+const INDICATOR_TEST_STATES = [
+  null,                                        // 0: off — use real ulxdData
+  { batt_bars: 5, rf_level: -65 },             // 1: full battery, strong RF
+  { batt_bars: 3, rf_level: -83 },             // 2: good battery, fair RF
+  { batt_bars: 2, rf_level: -88 },             // 3: low battery, weak RF
+  { batt_bars: 1, rf_level: -95 },             // 4: critical battery, critical RF
+  { batt_bars: 0, rf_level: null },            // 5: dead battery, no RF
+  { batt_bars: null, rf_level: null },         // 6: no data (all dim)
+];
+const INDICATOR_TEST_LABELS = ['⊙ Test indicators','TEST: FULL','TEST: FAIR','TEST: WEAK','TEST: CRIT','TEST: DEAD','TEST: NO DATA'];
 const _batteryAlerted = new Set(); // ch nums already toasted this session
 
 function fetchULXD() {
